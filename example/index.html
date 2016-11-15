@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>finger</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script id="template" type="plain/text">
+
+        <div>
+          <button @tap="tap()">
+            tap
+          </button>
+          <button @longTap="longTap">
+            longTap
+          </button>
+        </div>
+
+    </script>
+    <script src="https://unpkg.com/yox@latest"></script>
+    <script src="../dist/yox-finger.js"></script>
+    <script>
+        Yox.use(YoxFinger)
+        var instance = new Yox({
+          el: '#app',
+          data: {
+            pressOptions: {
+              event: 'xxx'
+            }
+          },
+          template: '#template',
+          events: {
+            longTap: function () {
+              console.log('longTap', this, arguments)
+            }
+          },
+          methods: {
+            tap: function () {
+              console.log('tap', this, arguments)
+            }
+          }
+        })
+    </script>
+</body>
+</html>
