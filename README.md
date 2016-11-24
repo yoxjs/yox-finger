@@ -17,15 +17,11 @@ npm install yox-finger
 CDN
 
 ```html
+<script src="https://unpkg.com/yox@latest"></script>
 <script src="https://unpkg.com/yox-finger@latest"></script>
 ```
 
 ## Usage
-
-```javascript
-// 注册插件
-Yox.use(YoxFinger)
-```
 
 ```html
 <button @tap="tap()">

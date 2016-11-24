@@ -281,6 +281,8 @@ var directive = {
   }
 };
 
+var version = '0.0.2';
+
 function install(Yox) {
   utils = Yox.utils;
   utils.array.each([TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP, SWIPE, PINCH, ROTATE, PRESS_MOVE, MULTIPOINT_START, MULTIPOINT_END], function (name) {
@@ -288,6 +290,11 @@ function install(Yox) {
   });
 }
 
+if (typeof Yox !== 'undefined' && Yox.use) {
+  Yox.use(Router);
+}
+
+exports.version = version;
 exports.install = install;
 
 Object.defineProperty(exports, '__esModule', { value: true });

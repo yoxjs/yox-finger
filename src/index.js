@@ -70,6 +70,8 @@ const directive = {
   }
 }
 
+export const version = '0.0.2'
+
 export function install(Yox) {
   utils = Yox.utils
   utils.array.each(
@@ -78,4 +80,9 @@ export function install(Yox) {
       Yox.directive(name, directive)
     }
   )
+}
+
+// 如果全局环境已有 Yox，自动安装
+if (typeof Yox !== 'undefined' && Yox.use) {
+  Yox.use(Router)
 }
