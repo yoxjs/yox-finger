@@ -14,6 +14,12 @@ NPM
 npm install yox-finger
 ```
 
+```javascript
+import Yox from 'yox'
+import YoxFinger from 'yox-finger'
+Yox.use(YoxFinger)
+```
+
 CDN
 
 ```html
@@ -24,10 +30,23 @@ CDN
 ## Usage
 
 ```html
-<button @tap="tap()">
+<button o-tap="tap()">
   Tap
 </button>
-<button @pinch="pinch()">
+<button o-pinch="pinch()">
   Pinch
 </button>
+```
+
+```javascript
+{
+    methods: {
+        tap: function () {
+
+        },
+        pinch: function () {
+
+        }
+    }
+}
 ```
