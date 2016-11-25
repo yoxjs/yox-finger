@@ -1,7 +1,13 @@
 
-import AlloyFinger from './AlloyFinger'
+let AlloyFinger = typeof require === 'function'
+    ? require('alloyfinger')
+    : window.AlloyFinger
 
-let utils
+if (!AlloyFinger) {
+  throw new Error('[yox-touch] cannot locate AlloyFinger.js.')
+}
+
+let Event, Emitter
 
 const TAP = 'tap'
 const LONG_TAP = 'longTap'
@@ -18,7 +24,7 @@ const directive = {
   attach: function ({ el, name, node, instance, directives }) {
 
     if (!el.$finger) {
-      let emitter = new utils.Emitter()
+      let emitter = new Emitter()
       let alloy = new AlloyFinger(el, {
         tap: function (e) {
           emitter.fire(TAP, e)
@@ -58,7 +64,7 @@ const directive = {
     el.$finger.emitter.on(
       name,
       function (event) {
-        return listener.call(this, new utils.Event(event))
+        return listener.call(this, new Event(event))
       }
     )
 
@@ -70,16 +76,21 @@ const directive = {
   }
 }
 
-export const version = '0.0.3'
+export const version = '0.0.4'
 
 export function install(Yox) {
-  utils = Yox.utils
+
+  let { utils } = Yox
+  Event = utils.Event
+  Emitter = utils.Emitter
+
   utils.array.each(
     [ TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP, SWIPE, PINCH, ROTATE, PRESS_MOVE, MULTIPOINT_START, MULTIPOINT_END ],
     function (name) {
       Yox.directive(name, directive)
     }
   )
+
 }
 
 // 如果全局环境已有 Yox，自动安装
