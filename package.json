@@ -1,8 +1,14 @@
 {
   "name": "yox-finger",
-  "version": "0.0.5",
-  "description": "yox-finger",
+  "version": "0.0.6",
+  "description": "AlloyFinger wrapper for yox.js",
   "main": "dist/yox-finger.min.js",
+  "keywords": [
+    "lightweight",
+    "touch",
+    "alloyfinger",
+    "mvvm"
+  ],
   "scripts": {
     "source": "rollup -c",
     "release": "NODE_ENV=release rollup -c"

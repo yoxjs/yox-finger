@@ -21,7 +21,7 @@ const MULTIPOINT_START = 'multipointStart'
 const MULTIPOINT_END = 'multipointEnd'
 
 const directive = {
-  onattach: function ({ el, name, node, instance, directives }) {
+  onAttach: function ({ el, name, node, instance }) {
 
     if (!el.$finger) {
       let emitter = new Emitter()
@@ -69,14 +69,14 @@ const directive = {
     )
 
   },
-  ondetach: function (name, el) {
+  onDetach: function (name, el) {
     el.$finger.alloy.destroy()
     el.$finger.emitter.off()
     el.$finger = null
   }
 }
 
-export const version = '0.0.5'
+export const version = '0.0.6'
 
 export function install(Yox) {
 
