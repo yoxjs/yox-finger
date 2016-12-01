@@ -60,7 +60,7 @@ const directive = {
       el.$finger = { emitter, alloy }
     }
 
-    let listener = instance.compileAttr(node.keypath, node.getValue())
+    let listener = instance.compileValue(node.keypath, node.getValue())
     el.$finger.emitter.on(
       name,
       function (event) {
@@ -76,7 +76,7 @@ const directive = {
   }
 }
 
-export const version = '0.1.0'
+export const version = '0.1.1'
 
 export function install(Yox) {
 
