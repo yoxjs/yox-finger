@@ -71,7 +71,7 @@ var directive = {
       })();
     }
 
-    var listener = instance.compileValue(node.keypath, node.getValue());
+    var listener = instance.compileValue(node.keypath, node.value);
     el.$finger.emitter.on(name, function (event) {
       return listener(new Event(event));
     });
@@ -83,7 +83,7 @@ var directive = {
   }
 };
 
-var version = '0.1.1';
+var version = '0.2.0';
 
 function install(Yox) {
   var utils = Yox.utils;

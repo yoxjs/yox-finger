@@ -60,7 +60,7 @@ const directive = {
       el.$finger = { emitter, alloy }
     }
 
-    let listener = instance.compileValue(node.keypath, node.getValue())
+    let listener = instance.compileValue(node.keypath, node.value)
     el.$finger.emitter.on(
       name,
       function (event) {
@@ -76,7 +76,7 @@ const directive = {
   }
 }
 
-export const version = '0.1.1'
+export const version = '0.2.0'
 
 export function install(Yox) {
 
@@ -85,7 +85,11 @@ export function install(Yox) {
   Emitter = utils.Emitter
 
   utils.array.each(
-    [ TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP, SWIPE, PINCH, ROTATE, PRESS_MOVE, MULTIPOINT_START, MULTIPOINT_END ],
+    [
+      TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP,
+      SWIPE, PINCH, ROTATE, PRESS_MOVE,
+      MULTIPOINT_START, MULTIPOINT_END
+    ],
     function (name) {
       Yox.directive(name, directive)
     }
