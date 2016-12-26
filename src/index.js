@@ -21,7 +21,7 @@ const MULTIPOINT_START = 'multipointStart'
 const MULTIPOINT_END = 'multipointEnd'
 
 const directive = {
-  attach: function ({ el, name, node, instance }) {
+  attach: function ({ el, node, instance }) {
 
     if (!el.$finger) {
       let emitter = new Emitter()
@@ -62,21 +62,21 @@ const directive = {
 
     let listener = instance.compileValue(node.keypath, node.value)
     el.$finger.emitter.on(
-      name,
+      node.name,
       function (event) {
         return listener(new Event(event))
       }
     )
 
   },
-  detach: function (name, el) {
+  detach: function ({ el }) {
     el.$finger.alloy.destroy()
     el.$finger.emitter.off()
     el.$finger = null
   }
 }
 
-export const version = '0.2.0'
+export const version = '0.2.1'
 
 export function install(Yox) {
 

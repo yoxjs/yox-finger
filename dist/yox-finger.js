@@ -27,7 +27,6 @@ var MULTIPOINT_END = 'multipointEnd';
 var directive = {
   attach: function attach(_ref) {
     var el = _ref.el,
-        name = _ref.name,
         node = _ref.node,
         instance = _ref.instance;
 
@@ -72,18 +71,20 @@ var directive = {
     }
 
     var listener = instance.compileValue(node.keypath, node.value);
-    el.$finger.emitter.on(name, function (event) {
+    el.$finger.emitter.on(node.name, function (event) {
       return listener(new Event(event));
     });
   },
-  detach: function detach(name, el) {
+  detach: function detach(_ref2) {
+    var el = _ref2.el;
+
     el.$finger.alloy.destroy();
     el.$finger.emitter.off();
     el.$finger = null;
   }
 };
 
-var version = '0.2.0';
+var version = '0.2.1';
 
 function install(Yox) {
   var utils = Yox.utils;
