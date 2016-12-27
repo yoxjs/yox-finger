@@ -21,39 +21,39 @@ const MULTIPOINT_START = 'multipointStart'
 const MULTIPOINT_END = 'multipointEnd'
 
 const directive = {
-  attach: function ({ el, node, instance }) {
+  attach({ el, node, instance }) {
 
     if (!el.$finger) {
       let emitter = new Emitter()
       let alloy = new AlloyFinger(el, {
-        tap: function (e) {
+        tap(e) {
           emitter.fire(TAP, e)
         },
-        longTap: function (e) {
+        longTap(e) {
           emitter.fire(LONG_TAP, e)
         },
-        singleTap: function (e) {
+        singleTap(e) {
           emitter.fire(SINGLE_TAP, e)
         },
-        doubleTap: function (e) {
+        doubleTap(e) {
           emitter.fire(DOUBLE_TAP, e)
         },
-        swipe: function (e) {
+        swipe(e) {
           emitter.fire(SWIPE, e)
         },
-        pinch: function (e) {
+        pinch(e) {
           emitter.fire(PINCH, e)
         },
-        rotate: function (e) {
+        rotate(e) {
           emitter.fire(MULTIPOINT_START, e)
         },
-        pressMove: function (e) {
+        pressMove(e) {
           emitter.fire(PRESS_MOVE, e)
         },
-        multipointStart: function (e) {
+        multipointStart(e) {
           emitter.fire(MULTIPOINT_START, e)
         },
-        multipointEnd: function (e) {
+        multipointEnd(e) {
           emitter.fire(MULTIPOINT_END, e)
         },
       })
@@ -69,14 +69,14 @@ const directive = {
     )
 
   },
-  detach: function ({ el }) {
+  detach({ el }) {
     el.$finger.alloy.destroy()
     el.$finger.emitter.off()
     el.$finger = null
   }
 }
 
-export const version = '0.2.1'
+export const version = '0.2.2'
 
 export function install(Yox) {
 
