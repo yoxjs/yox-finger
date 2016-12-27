@@ -69,6 +69,10 @@ const directive = {
     )
 
   },
+  update(options) {
+    this.detach(options)
+    this.attach(options)
+  },
   detach({ el }) {
     el.$finger.alloy.destroy()
     el.$finger.emitter.off()
@@ -76,7 +80,7 @@ const directive = {
   }
 }
 
-export const version = '0.2.2'
+export const version = '0.3.0'
 
 export function install(Yox) {
 
