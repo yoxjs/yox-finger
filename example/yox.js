@@ -1,7 +1,7 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.Yox = factory());
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.Yox = factory());
 }(this, (function () { 'use strict';
 
 /**
@@ -262,7 +262,7 @@ var array$1 = Object.freeze({
 	falsy: falsy
 });
 
-var _execute = function (fn, context, args) {
+var callFunction = function (fn, context, args) {
   if (func(fn)) {
     if (array(args)) {
       return fn.apply(context, args);
@@ -287,15 +287,15 @@ var magic = function (options) {
   var key = args[0],
       value = args[1];
   if (object(key)) {
-    _execute(set, NULL, key);
+    callFunction(set, NULL, key);
   } else if (string(key)) {
     var _args = args,
         length = _args.length;
 
     if (length === 2) {
-      _execute(set, NULL, args);
+      callFunction(set, NULL, args);
     } else if (length === 1) {
-      return _execute(get, NULL, key);
+      return callFunction(get, NULL, key);
     }
   }
 };
@@ -333,7 +333,7 @@ function parse(str) {
   return str ? normalize(str).split(SEPARATOR_KEY) : [];
 }
 
-function stringify$1(keypaths) {
+function stringify(keypaths) {
   return keypaths.filter(function (term) {
     return term !== '' && term !== LEVEL_CURRENT;
   }).join(SEPARATOR_KEY);
@@ -348,7 +348,7 @@ function resolve(base, path) {
       list.push(normalize(term));
     }
   });
-  return stringify$1(list);
+  return stringify(list);
 }
 
 /**
@@ -754,7 +754,7 @@ var Emitter = function () {
       var handle = function handle(list, data) {
         if (array(list)) {
           each(list, function (listener) {
-            var result = _execute(listener, context, data);
+            var result = callFunction(listener, context, data);
 
             var $once = listener.$once;
 
@@ -882,7 +882,7 @@ function parse$1(str, separator, pair) {
 function charAt$1(str, index) {
   return str.charAt(index);
 }
-function charCodeAt(str, index) {
+function charCodeAt$1(str, index) {
   return str.charCodeAt(index);
 }
 
@@ -903,7 +903,7 @@ var string$1 = Object.freeze({
 	capitalize: capitalize,
 	parse: parse$1,
 	charAt: charAt$1,
-	charCodeAt: charCodeAt
+	charCodeAt: charCodeAt$1
 });
 
 /**
@@ -1003,64 +1003,6 @@ function run() {
   });
 }
 
-var breaklinePattern = /^[ \t]*\n[ \t]*$/;
-var breaklinePrefixPattern = /^[ \t]*\n/;
-var breaklineSuffixPattern = /\n[ \t]*$/;
-
-var nonSingleQuotePattern = /^[^']*/;
-var nonDoubleQuotePattern = /^[^"]*/;
-
-function trimBreakline(str) {
-  if (breaklinePattern.test(str)) {
-    return '';
-  }
-  return str.replace(breaklinePrefixPattern, '').replace(breaklineSuffixPattern, '');
-}
-
-function matchByQuote(str, nonQuote) {
-  var match = str.match(nonQuote === '"' ? nonDoubleQuotePattern : nonSingleQuotePattern);
-  return match ? match[0] : '';
-}
-
-function getLocationByIndex(str, index) {
-
-  var line = 0,
-      col = 0,
-      pos = 0;
-
-  each(str.split('\n'), function (lineStr) {
-    line++;
-    col = 0;
-
-    var length = lineStr.length;
-
-    if (index >= pos && index <= pos + length) {
-      col = index - pos;
-      return FALSE;
-    }
-
-    pos += length;
-  });
-
-  return {
-    line: line,
-    col: col
-  };
-}
-
-function parseError(str, errorMsg, errorIndex) {
-  if (errorIndex == NULL) {
-    errorMsg += '.';
-  } else {
-    var _getLocationByIndex = getLocationByIndex(str, errorIndex),
-        line = _getLocationByIndex.line,
-        col = _getLocationByIndex.col;
-
-    errorMsg += ', at line ' + line + ', col ' + col + '.';
-  }
-  error$1(errorMsg);
-}
-
 var IF = '#if';
 var ELSE = 'else';
 var ELSE_IF = 'else if';
@@ -1073,7 +1015,7 @@ var SPREAD = '...';
 var SPECIAL_EVENT = '$event';
 var SPECIAL_KEYPATH = '$keypath';
 
-var DIRECTIVE_PREFIX = 'o-';
+var DIRECTIVE_CUSTOM_PREFIX = 'o-';
 var DIRECTIVE_EVENT_PREFIX = 'on-';
 
 var DIRECTIVE_REF = 'ref';
@@ -1082,8 +1024,8 @@ var DIRECTIVE_MODEL = 'model';
 
 var KEYWORD_UNIQUE = 'key';
 
-var DELIMITER_OPENING = '\\{\\{\\s*';
-var DELIMITER_CLOSING = '\\s*\\}\\}';
+var DELIMITER_OPENING = '(?:\\{)?\\{\\{\\s*';
+var DELIMITER_CLOSING = '\\s*\\}\\}(?:\\})?';
 
 /**
  * if 节点
@@ -1193,6 +1135,11 @@ var Context = function () {
       return new Context(data, this);
     }
   }, {
+    key: 'pop',
+    value: function pop() {
+      return this.parent;
+    }
+  }, {
     key: 'format',
     value: function format(keypath) {
       var instance = this,
@@ -1200,7 +1147,7 @@ var Context = function () {
       if (keys$$1[0] === 'this') {
         keys$$1.shift();
         return {
-          keypath: stringify$1(keys$$1),
+          keypath: stringify(keys$$1),
           instance: instance
         };
       } else {
@@ -1227,7 +1174,7 @@ var Context = function () {
           });
           return {
             v: {
-              keypath: stringify$1(keys$$1.slice(index)),
+              keypath: stringify(keys$$1.slice(index)),
               instance: instance,
               lookup: lookup
             }
@@ -1398,6 +1345,11 @@ var Scanner = function () {
     value: function charAt(index) {
       return charAt$1(this.tail, index);
     }
+  }, {
+    key: 'charCodeAt',
+    value: function charCodeAt(index) {
+      return charCodeAt$1(this.tail, index);
+    }
   }]);
   return Scanner;
 }();
@@ -1411,90 +1363,13 @@ var Node = function () {
     classCallCheck(this, Node);
 
     this.type = type;
-    if (hasChildren !== FALSE) {
-      this.children = [];
-    }
   }
 
   createClass(Node, [{
     key: 'addChild',
     value: function addChild(child) {
-      this.children.push(child);
-    }
-  }, {
-    key: 'renderExpression',
-    value: function renderExpression(data) {
-      var context = data.context,
-          keys$$1 = data.keys,
-          addDeps = data.addDeps;
-
-      var _expr$execute = this.expr.execute(context),
-          value = _expr$execute.value,
-          deps = _expr$execute.deps;
-
-      var newDeps = {};
-      each$1(deps, function (value, key) {
-        newDeps[resolve(stringify$1(keys$$1), key)] = value;
-      });
-      addDeps(newDeps);
-      return {
-        value: value,
-        deps: newDeps
-      };
-    }
-  }, {
-    key: 'renderChildren',
-    value: function renderChildren(data, children) {
-      if (!children) {
-        children = this.children;
-      }
-      var list = [],
-          item = void 0;
-      var i = 0,
-          node = void 0,
-          next = void 0;
-      while (node = children[i]) {
-        item = node.render(data);
-        if (item) {
-          push$1(list, item);
-          if (node.type === IF$1 || node.type === ELSE_IF$1) {
-            // 跳过后面紧跟着的 elseif else
-            while (next = children[i + 1]) {
-              if (next.type === ELSE_IF$1 || next.type === ELSE$1) {
-                i++;
-              } else {
-                break;
-              }
-            }
-          }
-        }
-        i++;
-      }
-      return list;
-    }
-  }, {
-    key: 'renderTexts',
-    value: function renderTexts(data) {
-      var nodes = this.renderChildren(data);
-      var length = nodes.length;
-
-      if (length === 1) {
-        return nodes[0].content;
-      } else if (length > 1) {
-        return nodes.map(function (node) {
-          return node.content;
-        }).join('');
-      }
-    }
-  }, {
-    key: 'renderCondition',
-    value: function renderCondition(data) {
-      var _renderExpression = this.renderExpression(data),
-          value = _renderExpression.value;
-
-      if (value) {
-        return this.renderChildren(data);
-      }
+      var children = this.children || (this.children = []);
+      children.push(child);
     }
   }]);
   return Node;
@@ -1510,34 +1385,16 @@ var Node = function () {
 var Attribute = function (_Node) {
   inherits(Attribute, _Node);
 
-  function Attribute(options) {
+  function Attribute(name, value) {
     classCallCheck(this, Attribute);
 
-    var _this = possibleConstructorReturn(this, (Attribute.__proto__ || Object.getPrototypeOf(Attribute)).call(this, ATTRIBUTE, !has$2(options, 'value')));
+    var _this = possibleConstructorReturn(this, (Attribute.__proto__ || Object.getPrototypeOf(Attribute)).call(this, ATTRIBUTE));
 
-    extend(_this, options);
+    _this.name = name;
+    _this.value = value;
     return _this;
   }
 
-  createClass(Attribute, [{
-    key: 'render',
-    value: function render(data) {
-      var name = this.name;
-
-      if (name.type === EXPRESSION) {
-        var _name$renderExpressio = name.renderExpression(data),
-            value = _name$renderExpressio.value;
-
-        name = value;
-      }
-
-      return new Attribute({
-        name: name,
-        value: this.renderTexts(data),
-        keypath: stringify$1(data.keys)
-      });
-    }
-  }]);
   return Attribute;
 }(Node);
 
@@ -1554,26 +1411,17 @@ var Attribute = function (_Node) {
 var Directive = function (_Node) {
   inherits(Directive, _Node);
 
-  function Directive(options) {
+  function Directive(name, subName, value) {
     classCallCheck(this, Directive);
 
-    var _this = possibleConstructorReturn(this, (Directive.__proto__ || Object.getPrototypeOf(Directive)).call(this, DIRECTIVE, !has$2(options, 'value')));
+    var _this = possibleConstructorReturn(this, (Directive.__proto__ || Object.getPrototypeOf(Directive)).call(this, DIRECTIVE));
 
-    extend(_this, options);
+    _this.name = name;
+    _this.subName = subName;
+    _this.value = value;
     return _this;
   }
 
-  createClass(Directive, [{
-    key: 'render',
-    value: function render(data) {
-      return new Directive({
-        name: this.name,
-        subName: this.subName,
-        value: this.renderTexts(data),
-        keypath: stringify$1(data.keys)
-      });
-    }
-  }]);
   return Directive;
 }(Node);
 
@@ -1587,72 +1435,16 @@ var Directive = function (_Node) {
 var Each = function (_Node) {
   inherits(Each, _Node);
 
-  function Each(options) {
+  function Each(expr, index) {
     classCallCheck(this, Each);
 
     var _this = possibleConstructorReturn(this, (Each.__proto__ || Object.getPrototypeOf(Each)).call(this, EACH$1));
 
-    extend(_this, options);
+    _this.expr = expr;
+    _this.index = index;
     return _this;
   }
 
-  createClass(Each, [{
-    key: 'render',
-    value: function render(data) {
-
-      var instance = this;
-      var expr = instance.expr,
-          index = instance.index,
-          children = instance.children;
-
-      var _instance$renderExpre = instance.renderExpression(data),
-          value = _instance$renderExpre.value;
-
-      var iterate = void 0;
-      if (array(value)) {
-        iterate = each;
-      } else if (object(value)) {
-        iterate = each$1;
-      }
-
-      if (iterate) {
-        var _ret = function () {
-          data = copy(data);
-
-          var result = [];
-          var _data = data,
-              context = _data.context,
-              keys$$1 = _data.keys;
-
-          var listContext = context.push(value);
-
-          keys$$1.push(normalize(expr.stringify()));
-
-          iterate(value, function (item, i) {
-            if (index) {
-              listContext.set(index, i);
-            }
-
-            keys$$1.push(i);
-            listContext.set(SPECIAL_KEYPATH, stringify$1(keys$$1));
-
-            data.context = listContext.push(item);
-            push$1(result, instance.renderChildren(data));
-
-            keys$$1.pop();
-          });
-
-          keys$$1.pop();
-
-          return {
-            v: result
-          };
-        }();
-
-        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-      }
-    }
-  }]);
   return Each;
 }(Node);
 
@@ -1660,50 +1452,29 @@ var Each = function (_Node) {
  * 元素节点
  *
  * @param {string} name
- * @param {?string} component
+ * @param {?boolean} component 是否是组件
  */
 
 var Element = function (_Node) {
   inherits(Element, _Node);
 
-  function Element(options) {
+  function Element(name, component) {
     classCallCheck(this, Element);
 
     var _this = possibleConstructorReturn(this, (Element.__proto__ || Object.getPrototypeOf(Element)).call(this, ELEMENT));
 
-    extend(_this, options);
-    if (!array(options.attrs)) {
-      _this.attrs = [];
-    }
-    if (!array(options.directives)) {
-      _this.directives = [];
+    _this.name = name;
+    if (component) {
+      _this.component = component;
     }
     return _this;
   }
 
   createClass(Element, [{
-    key: 'addChild',
-    value: function addChild(child) {
-      var children = void 0;
-      if (child.type === ATTRIBUTE) {
-        children = this.attrs;
-      } else if (child.type === DIRECTIVE) {
-        children = this.directives;
-      } else {
-        children = this.children;
-      }
-      children.push(child);
-    }
-  }, {
-    key: 'render',
-    value: function render(data) {
-      return new Element({
-        name: this.name,
-        component: this.component,
-        children: this.renderChildren(data),
-        attrs: this.renderChildren(data, this.attrs),
-        directives: this.renderChildren(data, this.directives)
-      });
+    key: 'addAttr',
+    value: function addAttr(child) {
+      var attrs = this.attrs || (this.attrs = []);
+      attrs.push(child);
     }
   }]);
   return Element;
@@ -1721,12 +1492,6 @@ var Else = function (_Node) {
     return possibleConstructorReturn(this, (Else.__proto__ || Object.getPrototypeOf(Else)).call(this, ELSE$1));
   }
 
-  createClass(Else, [{
-    key: 'render',
-    value: function render(data) {
-      return this.renderChildren(data);
-    }
-  }]);
   return Else;
 }(Node);
 
@@ -1739,54 +1504,16 @@ var Else = function (_Node) {
 var ElseIf = function (_Node) {
   inherits(ElseIf, _Node);
 
-  function ElseIf(options) {
+  function ElseIf(expr) {
     classCallCheck(this, ElseIf);
 
     var _this = possibleConstructorReturn(this, (ElseIf.__proto__ || Object.getPrototypeOf(ElseIf)).call(this, ELSE_IF$1));
 
-    extend(_this, options);
+    _this.expr = expr;
     return _this;
   }
 
-  createClass(ElseIf, [{
-    key: 'render',
-    value: function render(data) {
-      return this.renderCondition(data);
-    }
-  }]);
   return ElseIf;
-}(Node);
-
-/**
- * 文本节点
- *
- * @param {*} content
- * @param {boolean} safe 是否安全渲染，即是否转义
- */
-
-var Text = function (_Node) {
-  inherits(Text, _Node);
-
-  function Text(options) {
-    classCallCheck(this, Text);
-
-    var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, TEXT, FALSE));
-
-    extend(_this, options);
-    return _this;
-  }
-
-  createClass(Text, [{
-    key: 'render',
-    value: function render(data) {
-      return new Text({
-        content: this.content,
-        safe: this.safe,
-        keypath: stringify$1(data.keys)
-      });
-    }
-  }]);
-  return Text;
 }(Node);
 
 /**
@@ -1799,32 +1526,16 @@ var Text = function (_Node) {
 var Expression = function (_Node) {
   inherits(Expression, _Node);
 
-  function Expression(options) {
+  function Expression(expr, safe) {
     classCallCheck(this, Expression);
 
-    var _this = possibleConstructorReturn(this, (Expression.__proto__ || Object.getPrototypeOf(Expression)).call(this, EXPRESSION, FALSE));
+    var _this = possibleConstructorReturn(this, (Expression.__proto__ || Object.getPrototypeOf(Expression)).call(this, EXPRESSION));
 
-    extend(_this, options);
+    _this.expr = expr;
+    _this.safe = safe;
     return _this;
   }
 
-  createClass(Expression, [{
-    key: 'render',
-    value: function render(data) {
-      var _renderExpression = this.renderExpression(data),
-          value = _renderExpression.value;
-
-      if (func(value) && value.$computed) {
-        value = value();
-      }
-
-      return new Text({
-        content: value,
-        safe: this.safe,
-        keypath: stringify$1(data.keys)
-      });
-    }
-  }]);
   return Expression;
 }(Node);
 
@@ -1837,21 +1548,15 @@ var Expression = function (_Node) {
 var If = function (_Node) {
   inherits(If, _Node);
 
-  function If(options) {
+  function If(expr) {
     classCallCheck(this, If);
 
     var _this = possibleConstructorReturn(this, (If.__proto__ || Object.getPrototypeOf(If)).call(this, IF$1));
 
-    extend(_this, options);
+    _this.expr = expr;
     return _this;
   }
 
-  createClass(If, [{
-    key: 'render',
-    value: function render(data) {
-      return this.renderCondition(data);
-    }
-  }]);
   return If;
 }(Node);
 
@@ -1864,26 +1569,15 @@ var If = function (_Node) {
 var Import = function (_Node) {
   inherits(Import, _Node);
 
-  function Import(options) {
+  function Import(name) {
     classCallCheck(this, Import);
 
-    var _this = possibleConstructorReturn(this, (Import.__proto__ || Object.getPrototypeOf(Import)).call(this, IMPORT$1, FALSE));
+    var _this = possibleConstructorReturn(this, (Import.__proto__ || Object.getPrototypeOf(Import)).call(this, IMPORT$1));
 
-    extend(_this, options);
+    _this.name = name;
     return _this;
   }
 
-  createClass(Import, [{
-    key: 'render',
-    value: function render(data) {
-      var partial = data.partial(this.name);
-      if (partial.type === ELEMENT) {
-        return partial.render(data);
-      } else if (partial.type === PARTIAL$1) {
-        return this.renderChildren(data, partial.children);
-      }
-    }
-  }]);
   return Import;
 }(Node);
 
@@ -1896,21 +1590,15 @@ var Import = function (_Node) {
 var Partial = function (_Node) {
   inherits(Partial, _Node);
 
-  function Partial(options) {
+  function Partial(name) {
     classCallCheck(this, Partial);
 
     var _this = possibleConstructorReturn(this, (Partial.__proto__ || Object.getPrototypeOf(Partial)).call(this, PARTIAL$1));
 
-    extend(_this, options);
+    _this.name = name;
     return _this;
   }
 
-  createClass(Partial, [{
-    key: 'render',
-    value: function render(data) {
-      data.partial(this.name, this);
-    }
-  }]);
   return Partial;
 }(Node);
 
@@ -1923,42 +1611,37 @@ var Partial = function (_Node) {
 var Spread = function (_Node) {
   inherits(Spread, _Node);
 
-  function Spread(options) {
+  function Spread(expr) {
     classCallCheck(this, Spread);
 
-    var _this = possibleConstructorReturn(this, (Spread.__proto__ || Object.getPrototypeOf(Spread)).call(this, SPREAD$1, FALSE));
+    var _this = possibleConstructorReturn(this, (Spread.__proto__ || Object.getPrototypeOf(Spread)).call(this, SPREAD$1));
 
-    extend(_this, options);
+    _this.expr = expr;
     return _this;
   }
 
-  createClass(Spread, [{
-    key: 'render',
-    value: function render(data) {
-      var _renderExpression = this.renderExpression(data),
-          value = _renderExpression.value;
-
-      if (object(value)) {
-        var _ret = function () {
-          var result = [],
-              keypath = stringify$1(data.keys);
-          each$1(value, function (value, name) {
-            result.push(new Attribute({
-              name: name,
-              value: value,
-              keypath: keypath
-            }));
-          });
-          return {
-            v: result
-          };
-        }();
-
-        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-      }
-    }
-  }]);
   return Spread;
+}(Node);
+
+/**
+ * 文本节点
+ *
+ * @param {*} content
+ */
+
+var Text = function (_Node) {
+  inherits(Text, _Node);
+
+  function Text(content) {
+    classCallCheck(this, Text);
+
+    var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, TEXT));
+
+    _this.content = content;
+    return _this;
+  }
+
+  return Text;
 }(Node);
 
 /**
@@ -2036,15 +1719,6 @@ function matchBestToken(content, sortedTokens) {
 }
 
 /**
- * 懒得说各种细节错误，表达式都输出了看不出原因我也没办法
- *
- * @param {string} expression
- */
-function parseError$1(expression) {
-  error$1('Failed to parse expression: [' + expression + '].');
-}
-
-/**
  * 数组表达式，如 [ 1, 2, 3 ]
  *
  * @type {number}
@@ -2119,147 +1793,100 @@ var Node$2 = function Node$2(type) {
 var Unary = function (_Node) {
   inherits(Unary, _Node);
 
-  function Unary(options) {
+  function Unary(operator, arg) {
     classCallCheck(this, Unary);
 
     var _this = possibleConstructorReturn(this, (Unary.__proto__ || Object.getPrototypeOf(Unary)).call(this, UNARY));
 
-    extend(_this, options);
+    _this.operator = operator;
+    _this.arg = arg;
     return _this;
   }
 
-  createClass(Unary, [{
-    key: 'stringify',
-    value: function stringify() {
-      var operator = this.operator,
-          arg = this.arg;
-
-      return '' + operator + arg.stringify();
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var operator = this.operator,
-          arg = this.arg;
-
-      var _arg$execute = arg.execute(context),
-          value = _arg$execute.value,
-          deps = _arg$execute.deps;
-
-      return {
-        value: OPERATOR[operator](value),
-        deps: deps
-      };
-    }
-  }]);
   return Unary;
 }(Node$2);
 
-var OPERATOR = {};
-OPERATOR[Unary.PLUS = '+'] = function (value) {
+Unary[Unary.PLUS = '+'] = function (value) {
   return +value;
 };
-OPERATOR[Unary.MINUS = '-'] = function (value) {
+Unary[Unary.MINUS = '-'] = function (value) {
   return -value;
 };
-OPERATOR[Unary.BANG = '!'] = function (value) {
+Unary[Unary.BANG = '!'] = function (value) {
   return !value;
 };
-OPERATOR[Unary.WAVE = '~'] = function (value) {
+Unary[Unary.WAVE = '~'] = function (value) {
   return ~value;
 };
 
 /**
  * Binary 节点
  *
- * @param {Node} left
- * @param {string} operator
  * @param {Node} right
+ * @param {string} operator
+ * @param {Node} left
  */
 
 var Binary = function (_Node) {
   inherits(Binary, _Node);
 
-  function Binary(options) {
+  function Binary(right, operator, left) {
     classCallCheck(this, Binary);
 
     var _this = possibleConstructorReturn(this, (Binary.__proto__ || Object.getPrototypeOf(Binary)).call(this, BINARY));
 
-    extend(_this, options);
+    _this.left = left;
+    _this.operator = operator;
+    _this.right = right;
     return _this;
   }
 
-  createClass(Binary, [{
-    key: 'stringify',
-    value: function stringify() {
-      var left = this.left,
-          operator = this.operator,
-          right = this.right;
-
-      return left.stringify() + ' ' + operator + ' ' + right.stringify();
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var left = this.left,
-          operator = this.operator,
-          right = this.right;
-
-      left = left.execute(context);
-      right = right.execute(context);
-      return {
-        value: OPERATOR$1[operator](left.value, right.value),
-        deps: extend(left.deps, right.deps)
-      };
-    }
-  }]);
   return Binary;
 }(Node$2);
 
-var OPERATOR$1 = {};
-OPERATOR$1[Binary.OR = '||'] = function (a, b) {
+Binary[Binary.OR = '||'] = function (a, b) {
   return a || b;
 };
-OPERATOR$1[Binary.AND = '&&'] = function (a, b) {
+Binary[Binary.AND = '&&'] = function (a, b) {
   return a && b;
 };
-OPERATOR$1[Binary.SE = '==='] = function (a, b) {
+Binary[Binary.SE = '==='] = function (a, b) {
   return a === b;
 };
-OPERATOR$1[Binary.SNE = '!=='] = function (a, b) {
+Binary[Binary.SNE = '!=='] = function (a, b) {
   return a !== b;
 };
-OPERATOR$1[Binary.LE = '=='] = function (a, b) {
+Binary[Binary.LE = '=='] = function (a, b) {
   return a == b;
 };
-OPERATOR$1[Binary.LNE = '!='] = function (a, b) {
+Binary[Binary.LNE = '!='] = function (a, b) {
   return a != b;
 };
-OPERATOR$1[Binary.LT = '<'] = function (a, b) {
+Binary[Binary.LT = '<'] = function (a, b) {
   return a < b;
 };
-OPERATOR$1[Binary.LTE = '<='] = function (a, b) {
+Binary[Binary.LTE = '<='] = function (a, b) {
   return a <= b;
 };
-OPERATOR$1[Binary.GT = '>'] = function (a, b) {
+Binary[Binary.GT = '>'] = function (a, b) {
   return a > b;
 };
-OPERATOR$1[Binary.GTE = '>='] = function (a, b) {
+Binary[Binary.GTE = '>='] = function (a, b) {
   return a >= b;
 };
-OPERATOR$1[Binary.PLUS = '+'] = function (a, b) {
+Binary[Binary.PLUS = '+'] = function (a, b) {
   return a + b;
 };
-OPERATOR$1[Binary.MINUS = '-'] = function (a, b) {
+Binary[Binary.MINUS = '-'] = function (a, b) {
   return a - b;
 };
-OPERATOR$1[Binary.MULTIPLY = '*'] = function (a, b) {
+Binary[Binary.MULTIPLY = '*'] = function (a, b) {
   return a * b;
 };
-OPERATOR$1[Binary.DIVIDE = '/'] = function (a, b) {
+Binary[Binary.DIVIDE = '/'] = function (a, b) {
   return a / b;
 };
-OPERATOR$1[Binary.MODULO = '%'] = function (a, b) {
+Binary[Binary.MODULO = '%'] = function (a, b) {
   return a % b;
 };
 
@@ -2297,38 +1924,15 @@ var binaryList = sortKeys(binaryMap);
 var Array$1 = function (_Node) {
   inherits(Array, _Node);
 
-  function Array(options) {
+  function Array(elements) {
     classCallCheck(this, Array);
 
     var _this = possibleConstructorReturn(this, (Array.__proto__ || Object.getPrototypeOf(Array)).call(this, ARRAY));
 
-    extend(_this, options);
+    _this.elements = elements;
     return _this;
   }
 
-  createClass(Array, [{
-    key: 'stringify',
-    value: function stringify() {
-      var elements = this.elements;
-
-      elements = elements.map(function (element) {
-        return element.stringify();
-      });
-      return '[' + elements.join(', ') + ']';
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var value = [],
-          deps = {};
-      each(this.elements, function (node) {
-        var result = node.execute(context);
-        value.push(result.value);
-        extend(deps, result.deps);
-      });
-      return { value: value, deps: deps };
-    }
-  }]);
   return Array;
 }(Node$2);
 
@@ -2342,46 +1946,16 @@ var Array$1 = function (_Node) {
 var Call = function (_Node) {
   inherits(Call, _Node);
 
-  function Call(options) {
+  function Call(callee, args) {
     classCallCheck(this, Call);
 
     var _this = possibleConstructorReturn(this, (Call.__proto__ || Object.getPrototypeOf(Call)).call(this, CALL));
 
-    extend(_this, options);
+    _this.callee = callee;
+    _this.args = args;
     return _this;
   }
 
-  createClass(Call, [{
-    key: 'stringify',
-    value: function stringify() {
-      var callee = this.callee,
-          args = this.args;
-
-      args = args.map(function (arg) {
-        return arg.stringify();
-      });
-      return callee.stringify() + '(' + args.join(', ') + ')';
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var callee = this.callee,
-          args = this.args;
-
-      var _callee$execute = callee.execute(context),
-          value = _callee$execute.value,
-          deps = _callee$execute.deps;
-
-      return {
-        value: _execute(value, NULL, args.map(function (arg) {
-          var result = arg.execute(context);
-          extend(deps, result.deps);
-          return result.value;
-        })),
-        deps: deps
-      };
-    }
-  }]);
   return Call;
 }(Node$2);
 
@@ -2396,47 +1970,17 @@ var Call = function (_Node) {
 var Conditional = function (_Node) {
   inherits(Conditional, _Node);
 
-  function Conditional(options) {
+  function Conditional(test, consequent, alternate) {
     classCallCheck(this, Conditional);
 
     var _this = possibleConstructorReturn(this, (Conditional.__proto__ || Object.getPrototypeOf(Conditional)).call(this, CONDITIONAL));
 
-    extend(_this, options);
+    _this.test = test;
+    _this.consequent = consequent;
+    _this.alternate = alternate;
     return _this;
   }
 
-  createClass(Conditional, [{
-    key: 'stringify',
-    value: function stringify() {
-      var test = this.test,
-          consequent = this.consequent,
-          alternate = this.alternate;
-
-      return test.stringify() + ' ? ' + consequent.stringify() + ' : ' + alternate.stringify();
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var test = this.test,
-          consequent = this.consequent,
-          alternate = this.alternate;
-
-      test = test.execute(context);
-      if (test.value) {
-        consequent = consequent.execute(context);
-        return {
-          value: consequent.value,
-          deps: extend(test.deps, consequent.deps)
-        };
-      } else {
-        alternate = alternate.execute(context);
-        return {
-          value: alternate.value,
-          deps: extend(test.deps, alternate.deps)
-        };
-      }
-    }
-  }]);
   return Conditional;
 }(Node$2);
 
@@ -2449,33 +1993,15 @@ var Conditional = function (_Node) {
 var Identifier = function (_Node) {
   inherits(Identifier, _Node);
 
-  function Identifier(options) {
+  function Identifier(name) {
     classCallCheck(this, Identifier);
 
     var _this = possibleConstructorReturn(this, (Identifier.__proto__ || Object.getPrototypeOf(Identifier)).call(this, IDENTIFIER));
 
-    extend(_this, options);
+    _this.name = name;
     return _this;
   }
 
-  createClass(Identifier, [{
-    key: 'stringify',
-    value: function stringify() {
-      return this.name;
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-      var deps = {};
-
-      var _context$get = context.get(this.name),
-          value = _context$get.value,
-          keypath = _context$get.keypath;
-
-      deps[keypath] = value;
-      return { value: value, deps: deps };
-    }
-  }]);
   return Identifier;
 }(Node$2);
 
@@ -2488,34 +2014,15 @@ var Identifier = function (_Node) {
 var Literal = function (_Node) {
   inherits(Literal, _Node);
 
-  function Literal(options) {
+  function Literal(value) {
     classCallCheck(this, Literal);
 
     var _this = possibleConstructorReturn(this, (Literal.__proto__ || Object.getPrototypeOf(Literal)).call(this, LITERAL));
 
-    extend(_this, options);
+    _this.value = value;
     return _this;
   }
 
-  createClass(Literal, [{
-    key: 'stringify',
-    value: function stringify() {
-      var value = this.value;
-
-      if (string(value)) {
-        return value.indexOf('"') >= 0 ? '\'' + value + '\'' : '"' + value + '"';
-      }
-      return value;
-    }
-  }, {
-    key: 'execute',
-    value: function execute() {
-      return {
-        value: this.value,
-        deps: {}
-      };
-    }
-  }]);
   return Literal;
 }(Node$2);
 
@@ -2523,88 +2030,41 @@ var Literal = function (_Node) {
  * Member 节点
  *
  * @param {Identifier} object
- * @param {Node} property
+ * @param {Node} prop
  */
 
 var Member = function (_Node) {
   inherits(Member, _Node);
 
-  function Member(options) {
+  function Member(object, prop) {
     classCallCheck(this, Member);
 
     var _this = possibleConstructorReturn(this, (Member.__proto__ || Object.getPrototypeOf(Member)).call(this, MEMBER));
 
-    extend(_this, options);
+    _this.object = object;
+    _this.prop = prop;
     return _this;
   }
 
-  createClass(Member, [{
-    key: 'flatten',
-    value: function flatten() {
-      var result = [];
-
-      var current = this,
-          next = void 0;
-      do {
-        next = current.object;
-        if (current.type === MEMBER) {
-          result.unshift(current.property);
-        } else {
-          result.unshift(current);
-        }
-      } while (current = next);
-
-      return result;
-    }
-  }, {
-    key: 'stringify',
-    value: function stringify(list) {
-      return this.flatten().map(function (node, index) {
-        if (node.type === LITERAL) {
-          var _node = node,
-              value = _node.value;
-
-          return numeric(value) ? '[' + value + ']' : '.' + value;
-        } else {
-          node = node.stringify();
-          return index > 0 ? '[' + node + ']' : node;
-        }
-      }).join('');
-    }
-  }, {
-    key: 'execute',
-    value: function execute(context) {
-
-      var deps = {},
-          keys$$1 = [];
-
-      each(this.flatten(), function (node, index) {
-        var type = node.type;
-
-        if (type !== LITERAL) {
-          if (index > 0) {
-            var result = node.execute(context);
-            extend(deps, result.deps);
-            keys$$1.push(result.value);
-          } else if (type === IDENTIFIER) {
-            keys$$1.push(node.name);
-          }
-        } else {
-          keys$$1.push(node.value);
-        }
-      });
-
-      var _context$get = context.get(stringify$1(keys$$1)),
-          value = _context$get.value,
-          keypath = _context$get.keypath;
-
-      deps[keypath] = value;
-
-      return { value: value, deps: deps };
-    }
-  }]);
   return Member;
 }(Node$2);
+
+Member.flatten = function (node) {
+
+  var result = [];
+
+  var next = void 0;
+  do {
+    next = node.object;
+    if (node.type === MEMBER) {
+      result.unshift(node.prop);
+    } else {
+      result.unshift(node);
+    }
+  } while (node = next);
+
+  return result;
+};
 
 // 分隔符
 var COMMA = 44; // ,
@@ -2628,8 +2088,167 @@ var keyword = {
   'undefined': UNDEFINED
 };
 
-// 编译结果缓存
+// 缓存编译结果
 var cache$1 = {};
+
+// 下面用了几次，提一个函数比较方便
+function stringifyRecursion(node) {
+  return stringify$1(node);
+}
+
+/**
+ * 序列化表达式
+ *
+ * @param {Node} node
+ * @return {string}
+ */
+function stringify$1(node) {
+
+  switch (node.type) {
+    case ARRAY:
+      return '[' + node.elements.map(stringifyRecursion).join(', ') + ']';
+
+    case BINARY:
+      return stringify$1(node.left) + ' ' + node.operator + ' ' + stringify$1(node.right);
+
+    case CALL:
+      return stringify$1(node.callee) + '(' + node.args.map(stringifyRecursion).join(', ') + ')';
+
+    case CONDITIONAL:
+      return stringify$1(node.test) + ' ? ' + stringify$1(node.consequent) + ' : ' + stringify$1(node.alternate);
+
+    case IDENTIFIER:
+      return node.name;
+
+    case LITERAL:
+      var value = node.value;
+
+      if (string(value)) {
+        return value.indexOf('"') >= 0 ? '\'' + value + '\'' : '"' + value + '"';
+      }
+      return value;
+
+    case MEMBER:
+      return Member.flatten(node).map(function (node, index) {
+        if (node.type === LITERAL) {
+          var _node = node,
+              _value = _node.value;
+
+          return numeric(_value) ? '[' + _value + ']' : '.' + _value;
+        } else {
+          node = stringify$1(node);
+          return index > 0 ? '[' + node + ']' : node;
+        }
+      }).join('');
+
+    case UNARY:
+      return '' + node.operator + stringify$1(node.arg);
+  }
+}
+
+/**
+ * 表达式求值
+ *
+ * @param {Node} node
+ * @param {Context} context
+ * @return {*}
+ */
+function execute(node, context) {
+
+  var deps = {},
+      value = void 0,
+      result = void 0;
+
+  (function () {
+    switch (node.type) {
+      case ARRAY:
+        value = [];
+        each(node.elements, function (node) {
+          result = execute(node, context);
+          push$1(value, result.value);
+          extend(deps, result.deps);
+        });
+        break;
+
+      case BINARY:
+        var left = node.left,
+            right = node.right;
+
+        left = execute(left, context);
+        right = execute(right, context);
+        value = Binary[node.operator](left.value, right.value);
+        deps = extend(left.deps, right.deps);
+        break;
+
+      case CALL:
+        result = execute(node.callee, context);
+        deps = result.deps;
+        value = callFunction(result.value, NULL, node.args.map(function (node) {
+          var result = execute(node, context);
+          extend(deps, result.deps);
+          return result.value;
+        }));
+        break;
+
+      case CONDITIONAL:
+        var test = node.test,
+            consequent = node.consequent,
+            alternate = node.alternate;
+
+        test = execute(test, context);
+        if (test.value) {
+          consequent = execute(consequent, context);
+          value = consequent.value;
+          deps = extend(test.deps, consequent.deps);
+        } else {
+          alternate = execute(alternate, context);
+          value = alternate.value;
+          deps = extend(test.deps, alternate.deps);
+        }
+        break;
+
+      case IDENTIFIER:
+        result = context.get(node.name);
+        value = result.value;
+        deps[result.keypath] = value;
+        break;
+
+      case LITERAL:
+        value = node.value;
+        break;
+
+      case MEMBER:
+        var keys$$1 = [];
+        each(Member.flatten(node), function (node, index) {
+          var type = node.type;
+
+          if (type !== LITERAL) {
+            if (index > 0) {
+              var _result = execute(node, context);
+              push$1(keys$$1, _result.value);
+              extend(deps, _result.deps);
+            } else if (type === IDENTIFIER) {
+              push$1(keys$$1, node.name);
+            }
+          } else {
+            push$1(keys$$1, node.value);
+          }
+        });
+        result = context.get(stringify(keys$$1));
+        value = result.value;
+        deps[result.keypath] = value;
+        break;
+
+      case UNARY:
+        result = execute(node.arg, context);
+        value = Unary[node.operator](result.value);
+        deps = result.deps;
+        break;
+    }
+  })();
+
+  return { value: value, deps: deps };
+}
 
 /**
  * 把表达式编译成抽象语法树
@@ -2652,8 +2271,11 @@ function compile$1(content) {
   var getChar = function getChar() {
     return charAt$1(content, index);
   };
-  var getCharCode = function getCharCode(i) {
-    return charCodeAt(content, i != NULL ? i : index);
+  var getCharCode = function getCharCode() {
+    return charCodeAt$1(content, index);
+  };
+  var parseError = function parseError() {
+    error$1('Failed to compile expression: \n' + content);
   };
 
   var skipWhitespace = function skipWhitespace() {
@@ -2674,13 +2296,13 @@ function compile$1(content) {
     index++;
     while (index < length) {
       index++;
-      if (getCharCode(index - 1) === quote) {
+      if (charCodeAt$1(content, index - 1) === quote) {
         closed = TRUE;
         break;
       }
     }
     if (!closed) {
-      return parseError$1(content);
+      return parseError();
     }
   };
 
@@ -2702,9 +2324,7 @@ function compile$1(content) {
       skipNumber();
     }
 
-    return new Literal({
-      value: parseFloat(content.substring(start, index))
-    });
+    return new Literal(parseFloat(content.substring(start, index)));
   };
 
   var parseString = function parseString() {
@@ -2713,9 +2333,7 @@ function compile$1(content) {
 
     skipString();
 
-    return new Literal({
-      value: content.substring(start + 1, index - 1)
-    });
+    return new Literal(content.substring(start + 1, index - 1));
   };
 
   var parseIdentifier = function parseIdentifier() {
@@ -2725,19 +2343,15 @@ function compile$1(content) {
 
     value = content.substring(start, index);
     if (keyword[value]) {
-      return new Literal({
-        value: keyword[value]
-      });
+      return new Literal(keyword[value]);
     }
 
     // this 也视为 IDENTIFIER
     if (value) {
-      return new Identifier({
-        name: value
-      });
+      return new Identifier(value);
     }
 
-    parseError$1(content);
+    parseError();
   };
 
   var parseTuple = function parseTuple(delimiter) {
@@ -2762,7 +2376,7 @@ function compile$1(content) {
       return args;
     }
 
-    parseError$1(content);
+    parseError();
   };
 
   var parseOperator = function parseOperator(sortedOperatorList) {
@@ -2783,29 +2397,18 @@ function compile$1(content) {
       charCode = getCharCode();
       if (charCode === OPAREN) {
         index++;
-        value = new Call({
-          callee: value,
-          args: parseTuple(CPAREN)
-        });
+        value = new Call(value, parseTuple(CPAREN));
         break;
       } else {
         // a.x
         if (charCode === PERIOD) {
           index++;
-          value = new Member({
-            object: value,
-            property: new Literal({
-              value: parseIdentifier().name
-            })
-          });
+          value = new Member(value, new Literal(parseIdentifier().name));
         }
         // a[x]
         else if (charCode === OBRACK) {
             index++;
-            value = new Member({
-              object: value,
-              property: parseSubexpression(CBRACK)
-            });
+            value = new Member(value, parseSubexpression(CBRACK));
           } else {
             break;
           }
@@ -2830,9 +2433,7 @@ function compile$1(content) {
       // [xx, xx]
       else if (charCode === OBRACK) {
           index++;
-          return new Array$1({
-            elements: parseTuple(CBRACK)
-          });
+          return new Array$1(parseTuple(CBRACK));
         }
         // (xx, xx)
         else if (charCode === OPAREN) {
@@ -2845,18 +2446,15 @@ function compile$1(content) {
     if (value) {
       return parseUnary(value);
     }
-    parseError$1(content);
+    parseError();
   };
 
   var parseUnary = function parseUnary(op) {
     value = parseToken();
     if (value) {
-      return new Unary({
-        operator: op,
-        arg: value
-      });
+      return new Unary(op, value);
     }
-    parseError$1(content);
+    parseError();
   };
 
   var parseBinary = function parseBinary() {
@@ -2874,18 +2472,14 @@ function compile$1(content) {
 
       // 处理左边
       if (stack.length > 3 && binaryMap[op] < stack[stack.length - 2]) {
-        stack.push(new Binary({
-          right: stack.pop(),
-          operator: (stack.pop(), stack.pop()),
-          left: stack.pop()
-        }));
+        stack.push(new Binary(stack.pop(), (stack.pop(), stack.pop()), stack.pop()));
       }
 
       right = parseToken();
       if (right) {
         stack.push(op, binaryMap[op], right);
       } else {
-        parseError$1(content);
+        parseError();
       }
     }
 
@@ -2896,11 +2490,7 @@ function compile$1(content) {
 
     right = stack.pop();
     while (stack.length > 1) {
-      right = new Binary({
-        right: right,
-        operator: (stack.pop(), stack.pop()),
-        left: stack.pop()
-      });
+      right = new Binary(right, (stack.pop(), stack.pop()), stack.pop());
     }
 
     return right;
@@ -2913,7 +2503,7 @@ function compile$1(content) {
       index++;
       return value;
     }
-    parseError$1(content);
+    parseError();
   };
 
   var parseExpression = function parseExpression() {
@@ -2938,13 +2528,9 @@ function compile$1(content) {
 
         // 保证调用 parseExpression() 之后无需再次调用 skipWhitespace()
         skipWhitespace();
-        return new Conditional({
-          test: test,
-          consequent: consequent,
-          alternate: alternate
-        });
+        return new Conditional(test, consequent, alternate);
       } else {
-        parseError$1(content);
+        parseError();
       }
     }
 
@@ -2954,7 +2540,11 @@ function compile$1(content) {
   return cache$1[content] = parseExpression();
 }
 
-var cache = {};
+var EQUAL = 61; // =
+var SLASH = 47; // /
+var ARROW_LEFT = 60; // <
+var ARROW_RIGHT = 62; // >
+var BREAKLINE = '\n';
 
 var openingDelimiterPattern = new RegExp(DELIMITER_OPENING);
 var closingDelimiterPattern = new RegExp(DELIMITER_CLOSING);
@@ -2962,7 +2552,13 @@ var closingDelimiterPattern = new RegExp(DELIMITER_CLOSING);
 var elementPattern = /<(?:\/)?[-a-z]\w*/i;
 var elementEndPattern = /(?:\/)?>/;
 
-var attributePattern = /([-:@a-z0-9]+)(=["'])?/i;
+var attributePattern = /([-:@a-z0-9]+)(?==["'])?/i;
+
+var nonSingleQuotePattern = /^[^']*/;
+var nonDoubleQuotePattern = /^[^"]*/;
+
+var breaklinePrefixPattern = /^[ \t]*\n/;
+var breaklineSuffixPattern = /\n[ \t]*$/;
 
 var componentNamePattern = /[-A-Z]/;
 var selfClosingTagNamePattern = /input|img|br/i;
@@ -2981,7 +2577,7 @@ var parsers = [{
     if (terms[1]) {
       index = terms[1].trim();
     }
-    return new Each({ expr: expr, index: index });
+    return new Each(expr, index);
   }
 }, {
   test: function test(source) {
@@ -2989,7 +2585,7 @@ var parsers = [{
   },
   create: function create(source) {
     var name = source.slice(IMPORT.length).trim();
-    return name ? new Import({ name: name }) : ERROR_PARTIAL_NAME;
+    return name ? new Import(name) : ERROR_PARTIAL_NAME;
   }
 }, {
   test: function test(source) {
@@ -2997,7 +2593,7 @@ var parsers = [{
   },
   create: function create(source) {
     var name = source.slice(PARTIAL.length).trim();
-    return name ? new Partial({ name: name }) : ERROR_PARTIAL_NAME;
+    return name ? new Partial(name) : ERROR_PARTIAL_NAME;
   }
 }, {
   test: function test(source) {
@@ -3005,17 +2601,17 @@ var parsers = [{
   },
   create: function create(source) {
     var expr = source.slice(IF.length).trim();
-    return expr ? new If({ expr: compile$1(expr) }) : ERROR_EXPRESSION;
+    return expr ? new If(compile$1(expr)) : ERROR_EXPRESSION;
   }
 }, {
   test: function test(source) {
     return source.startsWith(ELSE_IF);
   },
-  create: function create(source, popStack) {
+  create: function create(source, delimiter, popStack) {
     var expr = source.slice(ELSE_IF.length);
     if (expr) {
       popStack();
-      return new ElseIf({ expr: compile$1(expr) });
+      return new ElseIf(compile$1(expr));
     }
     return ERROR_EXPRESSION;
   }
@@ -3023,7 +2619,7 @@ var parsers = [{
   test: function test(source) {
     return source.startsWith(ELSE);
   },
-  create: function create(source, popStack) {
+  create: function create(source, delimiter, popStack) {
     popStack();
     return new Else();
   }
@@ -3034,7 +2630,7 @@ var parsers = [{
   create: function create(source) {
     var expr = source.slice(SPREAD.length);
     if (expr) {
-      return new Spread({ expr: compile$1(expr) });
+      return new Spread(compile$1(expr));
     }
     return ERROR_EXPRESSION;
   }
@@ -3042,85 +2638,514 @@ var parsers = [{
   test: function test(source) {
     return !source.startsWith(COMMENT);
   },
-  create: function create(source) {
-    var safe = TRUE;
-    if (source.startsWith('{')) {
-      safe = FALSE;
-      source = source.slice(1);
-    }
-    return new Expression({
-      expr: compile$1(source),
-      safe: safe
-    });
+  create: function create(source, delimiter) {
+    return new Expression(compile$1(source), !delimiter.endsWith('}}}'));
   }
 }];
 
-var LEVEL_ELEMENT = 0;
+// 2 种 level
+// 当 level 为 LEVEL_ATTRIBUTE 时，表示只可以处理属性和指令
+// 当 level 为 LEVEL_TEXT 时，表示只可以处理属性和指令的值
 var LEVEL_ATTRIBUTE = 1;
 var LEVEL_TEXT = 2;
 
+// 触发 level 变化的节点类型
+var levelTypes = {};
+levelTypes[ELEMENT] = levelTypes[ATTRIBUTE] = levelTypes[DIRECTIVE] = TRUE;
+
+// 叶子节点类型
+var leafTypes = {};
+leafTypes[EXPRESSION] = leafTypes[IMPORT$1] = leafTypes[SPREAD$1] = leafTypes[TEXT] = TRUE;
+
+// 内置指令，无需加前缀
 var buildInDirectives = {};
 buildInDirectives[DIRECTIVE_REF] = buildInDirectives[DIRECTIVE_LAZY] = buildInDirectives[DIRECTIVE_MODEL] = buildInDirectives[KEYWORD_UNIQUE] = TRUE;
 
 /**
- * 把抽象语法树渲染成 Virtual DOM
+ * 合并多个节点
  *
- * @param {Object} ast
- * @param {Object} data
- * @return {Object}
+ * 用于处理属性值，如 name="xx{{xx}}xx"  name="xx"  name="{{xx}}"
+ *
+ * @param {?Array} nodes
+ * @return {*}
  */
-function render$1(ast, data, partial) {
+function mergeNodes(nodes) {
+  if (array(nodes)) {
+    if (nodes.length === 1) {
+      return nodes[0];
+    } else if (nodes.length > 1) {
+      return nodes.join('');
+    }
+  }
+}
+
+/**
+ * 遍历节点树
+ *
+ * @param {Node} node
+ * @param {Function} enter
+ * @param {Function} leave
+ * @param {Function} traverseList
+ * @param {Function} recursion
+ * @return {*}
+ */
+function traverseTree(node, enter, leave, traverseList, recursion) {
+
+  var result = enter(node);
+  if (result) {
+    return result;
+  } else if (result === FALSE) {
+    return;
+  }
+
+  var children = node.children,
+      attrs = node.attrs;
+
+  if (array(children)) {
+    children = traverseList(children, recursion);
+  }
+  if (array(attrs)) {
+    attrs = traverseList(attrs, recursion);
+  }
+
+  return leave(node, children, attrs);
+}
+
+/**
+ * 遍历节点列表
+ *
+ * @param {Array.<Node>} nodes
+ * @param {Function} recursion
+ * @return {Array}
+ */
+function traverseList(nodes, recursion) {
+  var list = [],
+      item = void 0;
+  var i = 0,
+      node = void 0;
+  while (node = nodes[i]) {
+    item = recursion(node);
+    if (item) {
+      push$1(list, item);
+      if (node.type === IF$1 || node.type === ELSE_IF$1) {
+        // 跳过后面紧跟着的 elseif else
+        while (node = nodes[i + 1]) {
+          if (node.type === ELSE_IF$1 || node.type === ELSE$1) {
+            i++;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    i++;
+  }
+  return list;
+}
+
+/**
+ * 序列化表达式
+ *
+ * @param {Object} expr
+ * @return {string}
+ */
+function stringifyExpr(expr) {
+  return normalize(stringify$1(expr));
+}
+
+/**
+ * 渲染抽象语法树
+ *
+ * @param {Object} ast 编译出来的抽象语法树
+ * @param {Function} createText 创建文本节点
+ * @param {Function} createElement 创建元素节点
+ * @param {?Function} importTemplate 导入子模板，如果是纯模板，可不传
+ * @param {?Object} data 渲染模板的数据，如果渲染纯模板，可不传
+ * @return {Object} { node: x, deps: { } }
+ */
+function render(ast, createText, createElement, importTemplate, data) {
+
+  var context = void 0,
+      keys$$1 = void 0;
+  var getKeypath = function getKeypath() {
+    return '';
+  };
+
+  if (data) {
+    keys$$1 = [];
+    getKeypath = function getKeypath() {
+      return stringify(keys$$1);
+    };
+    getKeypath.$computed = TRUE;
+    data[SPECIAL_KEYPATH] = getKeypath;
+    context = new Context(data);
+  }
+
+  var count = 0;
+  var partials = {};
 
   var deps = {};
-
-  return {
-    root: ast.render({
-      keys: [],
-      context: new Context(data),
-      partial: partial,
-      addDeps: function addDeps(childrenDeps) {
-        extend(deps, childrenDeps);
-      }
-    }),
-    deps: deps
+  var executeExpr = function executeExpr(expr) {
+    var result = execute(expr, context);
+    each$1(result.deps, function (value, key) {
+      deps[resolve(getKeypath(), key)] = value;
+    });
+    return result.value;
   };
+
+  var recursion = function recursion(node) {
+    return traverseTree(node, function (node) {
+      var type = node.type,
+          name = node.name,
+          expr = node.expr;
+
+      var _ret = function () {
+
+        switch (type) {
+
+          // 用时定义的子模块无需注册到组件实例
+          case PARTIAL$1:
+            partials[name] = node;
+            return {
+              v: FALSE
+            };
+
+          case IMPORT$1:
+            var partial = partials[name] || importTemplate(name);
+            if (partial) {
+              if (string(partial)) {
+                return {
+                  v: traverseList(compile$$1(partial, TRUE), recursion)
+                };
+              }
+              return {
+                v: traverseList(partial.children, recursion)
+              };
+            }
+            error$1('Importing partial \'' + name + '\' is not found.');
+            break;
+
+          // 条件判断失败就没必要往下走了
+          case IF$1:
+          case ELSE_IF$1:
+            if (!executeExpr(expr)) {
+              return {
+                v: FALSE
+              };
+            }
+            break;
+
+          // each 比较特殊，只能放在 enter 里执行
+          case EACH$1:
+            var index = node.index,
+                children = node.children;
+
+            var value = executeExpr(expr);
+
+            var iterate = void 0;
+            if (array(value)) {
+              iterate = each;
+            } else if (object(value)) {
+              iterate = each$1;
+            } else {
+              return {
+                v: FALSE
+              };
+            }
+
+            var result = [];
+
+            push$1(keys$$1, stringifyExpr(expr));
+            context = context.push(value);
+
+            iterate(value, function (item, i) {
+              if (index) {
+                context.set(index, i);
+              }
+
+              push$1(keys$$1, i);
+              context = context.push(item);
+
+              push$1(result, traverseList(children, recursion));
+
+              keys$$1.pop();
+              context = context.pop();
+            });
+
+            keys$$1.pop();
+            context = context.pop();
+
+            return {
+              v: result
+            };
+
+        }
+      }();
+
+      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      if (has$2(levelTypes, type)) {
+        count++;
+      }
+    }, function (node, children, attrs) {
+      var type = node.type,
+          name = node.name,
+          subName = node.subName,
+          component = node.component,
+          content = node.content;
+
+      var keypath = getKeypath();
+
+      if (has$2(levelTypes, type)) {
+        count--;
+      }
+
+      var _ret2 = function () {
+        switch (type) {
+          case TEXT:
+            return {
+              v: createText({
+                keypath: keypath,
+                content: content
+              })
+            };
+
+          case EXPRESSION:
+            var expr = node.expr,
+                safe = node.safe;
+
+            content = executeExpr(expr);
+            if (func(content) && content.$computed) {
+              content = content();
+            }
+            return {
+              v: createText({
+                safe: safe,
+                keypath: keypath,
+                content: content
+              })
+            };
+
+          case ATTRIBUTE:
+            if (name.type === EXPRESSION) {
+              name = executeExpr(name.expr);
+            }
+            return {
+              v: {
+                name: name,
+                keypath: keypath,
+                value: mergeNodes(children)
+              }
+            };
+
+          case DIRECTIVE:
+            return {
+              v: {
+                name: name,
+                subName: subName,
+                keypath: keypath,
+                value: mergeNodes(children)
+              }
+            };
+
+          case IF$1:
+          case ELSE_IF$1:
+          case ELSE$1:
+            return {
+              v: children
+            };
+
+          case SPREAD$1:
+            content = executeExpr(node.expr);
+            if (object(content)) {
+              var _ret3 = function () {
+                var result = [];
+                each$1(content, function (value, name) {
+                  push$1(result, {
+                    name: name,
+                    value: value,
+                    keypath: keypath
+                  });
+                });
+                return {
+                  v: {
+                    v: result
+                  }
+                };
+              }();
+
+              if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+            }
+            break;
+
+          case ELEMENT:
+            var attributes = [],
+                directives = [];
+            if (attrs) {
+              each(attrs, function (node) {
+                if (has$2(node, 'subName')) {
+                  if (node.name && node.subName !== '') {
+                    push$1(directives, node);
+                  }
+                } else {
+                  push$1(attributes, node);
+                }
+              });
+            }
+            if (!children) {
+              children = [];
+            }
+            return {
+              v: createElement({
+                name: name,
+                attributes: attributes,
+                directives: directives,
+                children: children,
+                keypath: keypath
+              }, !count, component)
+            };
+        }
+      }();
+
+      if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+    }, traverseList, recursion);
+  };
+
+  var node = recursion(ast);
+
+  return { node: node, deps: deps };
+}
+
+// 缓存编译结果
+var cache = {};
+
+function getLocationByPos(str, pos) {
+
+  var line = 0,
+      col = 0,
+      index = 0;
+
+  each(str.split(BREAKLINE), function (lineStr) {
+    line++;
+    col = 0;
+
+    var length = lineStr.length;
+
+    if (pos >= index && pos <= index + length) {
+      col = pos - index;
+      return FALSE;
+    }
+
+    index += length;
+  });
+
+  return { line: line, col: col };
+}
+
+/**
+ * 是否是纯粹的换行
+ *
+ * @param {string} content
+ * @return {boolean}
+ */
+function isBreakline(content) {
+  return content.indexOf(BREAKLINE) >= 0 && content.trim() === '';
+}
+
+/**
+ * trim 文本开始和结束位置的换行符
+ *
+ * @param {string} content
+ * @return {boolean}
+ */
+function trimBreakline(content) {
+  return content.replace(breaklinePrefixPattern, '').replace(breaklineSuffixPattern, '');
+}
+
+/**
+ * 解析属性值，传入开始引号，匹配结束引号
+ *
+ * @param {string} content
+ * @param {string} quote
+ * @return {Object}
+ */
+function parseAttributeValue(content, quote) {
+
+  var result = {
+    content: content
+  };
+
+  var match = content.match(quote === '"' ? nonDoubleQuotePattern : nonSingleQuotePattern);
+
+  if (match) {
+    result.value = match[0];
+
+    var length = match[0].length;
+
+    if (charAt$1(content, length) === quote) {
+      result.end = TRUE;
+      length++;
+    }
+    if (length) {
+      result.content = content.slice(length);
+    }
+  }
+
+  return result;
 }
 
 /**
  * 把模板编译为抽象语法树
  *
  * @param {string} template
+ * @param {?boolean} loose
  * @return {Object}
  */
-function compile$$1(template) {
+function compile$$1(template, loose) {
 
   if (cache[template]) {
     return cache[template];
   }
 
-  var name = void 0,
-      quote = void 0,
-      content = void 0,
-      isSelfClosing = void 0,
-      match = void 0;
+  // 当前内容
+  var content = void 0;
+  // 记录标签名、属性名、指令名
+  var name = void 0;
+  // 记录属性值、指令值的开始引号，方便匹配结束引号
+  var quote = void 0;
+  // 标签是否子闭合
+  var isSelfClosing = void 0;
+  // 正则匹配结果
+  var match = void 0;
+  // 分隔符
+  var delimiter = void 0;
 
+  // 主扫描器
   var mainScanner = new Scanner(template);
+  // 辅扫描器
   var helperScanner = new Scanner();
 
-  // level 有三级
-  // 0 表示可以 add Element 和 Text
-  // 1 表示只能 add Attribute 和 Directive
-  // 2 表示只能 add Text
-
-  var level = LEVEL_ELEMENT,
+  var level = void 0,
       levelNode = void 0;
 
   var nodeStack = [];
-  var rootNode = new Element({ name: 'root' });
+  var rootNode = new Element('root');
   var currentNode = rootNode;
 
+  var parseError = function parseError(msg, pos) {
+    if (pos == NULL) {
+      msg += '.';
+    } else {
+      var _getLocationByPos = getLocationByPos(template, pos),
+          line = _getLocationByPos.line,
+          col = _getLocationByPos.col;
+
+      msg += ', at line ' + line + ', col ' + col + '.';
+    }
+    error$1('' + msg + BREAKLINE + template);
+  };
+
   var pushStack = function pushStack(node) {
-    nodeStack.push(currentNode);
+    push$1(nodeStack, currentNode);
     currentNode = node;
   };
 
@@ -3131,46 +3156,58 @@ function compile$$1(template) {
 
   var addChild = function addChild(node) {
     var type = node.type,
-        content = node.content,
-        children = node.children;
+        content = node.content;
 
 
     if (type === TEXT) {
-      if (content = trimBreakline(content)) {
-        node.content = content;
-      } else {
+      if (isBreakline(content) || !(content = trimBreakline(content))) {
         return;
       }
+      node.content = content;
     }
 
-    if (node.invalid !== TRUE) {
+    if (level === LEVEL_ATTRIBUTE && currentNode.addAttr) {
+      currentNode.addAttr(node);
+    } else {
       currentNode.addChild(node);
     }
 
-    if (children) {
+    if (!leafTypes[type]) {
       pushStack(node);
     }
   };
 
-  var parseAttributeValue = function parseAttributeValue(content) {
-    match = matchByQuote(content, quote);
-    if (match) {
-      addChild(new Text({
-        content: match
-      }));
-    }
-    var _match = match,
-        length = _match.length;
+  // 属性和指令支持以下 8 种写法：
+  // 1. name
+  // 2. name="value"
+  // 3. name="{{value}}"
+  // 4. name="prefix{{value}}suffix"
+  // 5. {{name}}
+  // 6. {{name}}="value"
+  // 7. {{name}}="{{value}}"
+  // 8. {{name}}="prefix{{value}}suffix"
+  var parseAttribute = function parseAttribute(content) {
 
-    if (content.charAt(length) === quote) {
+    if (falsy(levelNode.children)) {
+      if (content && charCodeAt$1(content, 0) === EQUAL) {
+        quote = charAt$1(content, 1);
+        content = content.slice(2);
+      } else {
+        popStack();
+        level = LEVEL_ATTRIBUTE;
+        return content;
+      }
+    }
+
+    match = parseAttributeValue(content, quote);
+    if (match.value) {
+      addChild(new Text(match.value));
+    }
+    if (match.end) {
       popStack();
-      level--;
-      length++;
+      level = LEVEL_ATTRIBUTE;
     }
-    if (length) {
-      content = content.slice(length);
-    }
-    return content;
+    return match.content;
   };
 
   // 核心函数，负责分隔符和普通字符串的深度解析
@@ -3184,101 +3221,58 @@ function compile$$1(template) {
 
       if (content) {
 
-        // 支持以下 8 种写法：
-        // 1. name
-        // 2. name="value"
-        // 3. name="{{value}}"
-        // 4. name="prefix{{value}}suffix"
-        // 5. {{name}}
-        // 6. {{name}}="value"
-        // 7. {{name}}="{{value}}"
-        // 8. {{name}}="prefix{{value}}suffix"
-
-        // 已开始解析 ATTRIBUTE 或 DIRECTIVE
-        // 表示至少已经有了 name
         if (level === LEVEL_TEXT) {
-          // 命中 8 种写法中的 3 4
-          // 因为前面处理过 {{ }}，所以 levelNode 必定有 child
-          if (levelNode.children.length) {
-            content = parseAttributeValue(content);
-          } else {
-            // 命中 8 种写法中的 6 7 8
-            if (content.charAt(0) === '=') {
-              quote = content.charAt(1);
-              content = content.slice(2);
-            }
-            // 命中 8 种写法中的 5
-            else {
-                popStack();
-                level--;
-              }
-            // 8 种写法中的 1 2 在下面的 if 会一次性处理完，逻辑走不进这里
-          }
+          content = parseAttribute(content);
         }
 
         if (level === LEVEL_ATTRIBUTE) {
-          // 下一个属性的开始
           while (content && (match = attributePattern.exec(content))) {
             content = content.slice(match.index + match[0].length);
             name = match[1];
 
             if (buildInDirectives[name]) {
-              levelNode = new Directive({ name: name });
+              levelNode = new Directive(name);
             } else {
               if (name.startsWith(DIRECTIVE_EVENT_PREFIX)) {
                 name = name.slice(DIRECTIVE_EVENT_PREFIX.length);
-                if (name) {
-                  levelNode = new Directive({ name: 'event', subName: name });
-                }
-              } else if (name.startsWith(DIRECTIVE_PREFIX)) {
-                name = name.slice(DIRECTIVE_PREFIX.length);
-                levelNode = new Directive({ name: name });
-                if (!name || buildInDirectives[name]) {
-                  levelNode.invalid = TRUE;
-                }
+                levelNode = new Directive('event', name);
+              } else if (name.startsWith(DIRECTIVE_CUSTOM_PREFIX)) {
+                name = name.slice(DIRECTIVE_CUSTOM_PREFIX.length);
+                levelNode = new Directive(name);
               } else {
-                levelNode = new Attribute({ name: name });
+                levelNode = new Attribute(name);
               }
             }
 
             addChild(levelNode);
-            level++;
+            level = LEVEL_TEXT;
 
-            match = match[2];
-            if (match) {
-              quote = match.charAt(1);
-              content = parseAttributeValue(content);
-            } else {
-              popStack();
-              level--;
-            }
+            content = parseAttribute(content);
           }
         } else if (content) {
-          addChild(new Text({ content: content }));
+          addChild(new Text(content));
         }
       }
 
       // 分隔符之间的内容
       content = helperScanner.nextBefore(closingDelimiterPattern);
-      helperScanner.nextAfter(closingDelimiterPattern);
+      // 结束分隔符
+      delimiter = helperScanner.nextAfter(closingDelimiterPattern);
 
       if (content) {
-        if (content.charAt(0) === '/') {
+        if (charCodeAt$1(content, 0) === SLASH) {
           popStack();
         } else {
-          if (content.charAt(0) === '{' && helperScanner.charAt(0) === '}') {
-            helperScanner.forward(1);
-          }
           each(parsers, function (parser, index) {
-            if (parser.test(content)) {
+            if (parser.test(content, delimiter)) {
               // 用 index 节省一个变量定义
-              index = parser.create(content, popStack);
+              index = parser.create(content, delimiter, popStack);
               if (string(index)) {
-                parseError(template, index, mainScanner.pos + helperScanner.pos);
+                parseError(index, mainScanner.pos + helperScanner.pos);
               } else if (level === LEVEL_ATTRIBUTE && index.type === EXPRESSION) {
-                levelNode = new Attribute({ name: index });
-                level++;
+                levelNode = new Attribute(index);
                 addChild(levelNode);
+                level = LEVEL_TEXT;
               } else {
                 addChild(index);
               }
@@ -3300,21 +3294,21 @@ function compile$$1(template) {
 
     // 接下来必须是 < 开头（标签）
     // 如果不是标签，那就该结束了
-    if (mainScanner.charAt(0) !== '<') {
+    if (mainScanner.charCodeAt(0) !== ARROW_LEFT) {
       break;
     }
 
     // 结束标签
-    if (mainScanner.charAt(1) === '/') {
+    if (mainScanner.charCodeAt(1) === SLASH) {
       // 取出 </tagName
       content = mainScanner.nextAfter(elementPattern);
       name = content.slice(2);
 
       // 没有匹配到 >
-      if (mainScanner.charAt(0) !== '>') {
-        return parseError(template, 'Illegal tag name', mainScanner.pos);
+      if (mainScanner.charCodeAt(0) !== ARROW_RIGHT) {
+        return parseError('Illegal tag name', mainScanner.pos);
       } else if (currentNode.type === ELEMENT && name !== currentNode.name) {
-        return parseError(template, 'Unexpected closing tag', mainScanner.pos);
+        return parseError('Unexpected closing tag', mainScanner.pos);
       }
 
       popStack();
@@ -3329,30 +3323,28 @@ function compile$$1(template) {
         name = content.slice(1);
 
         if (componentNamePattern.test(name)) {
-          // 低版本浏览器不支持自定义标签，需要转成 div
-          addChild(new Element({
-            name: 'div',
-            component: name
-          }));
+          levelNode = new Element(name, TRUE);
           isSelfClosing = TRUE;
         } else {
-          addChild(new Element({ name: name }));
+          levelNode = new Element(name);
           isSelfClosing = selfClosingTagNamePattern.test(name);
         }
+
+        addChild(levelNode);
 
         // 截取 <name 和 > 之间的内容
         // 用于提取 Attribute 和 Directive
         content = mainScanner.nextBefore(elementEndPattern);
         if (content) {
-          level++;
+          level = LEVEL_ATTRIBUTE;
           parseContent(content);
-          level--;
+          level = NULL;
         }
 
         content = mainScanner.nextAfter(elementEndPattern);
         // 没有匹配到 > 或 />
         if (!content) {
-          return parseError(template, 'Illegal tag name', mainScanner.pos);
+          return parseError('Illegal tag name', mainScanner.pos);
         }
 
         if (isSelfClosing) {
@@ -3362,16 +3354,20 @@ function compile$$1(template) {
   }
 
   if (nodeStack.length) {
-    return parseError(template, 'Missing end tag (</' + nodeStack[0].name + '>)', mainScanner.pos);
+    return parseError('Missing end tag (</' + nodeStack[0].name + '>)', mainScanner.pos);
   }
 
   var children = rootNode.children;
 
-  if (children.length > 1) {
-    error$1('Component template should contain exactly one root element.');
+  if (loose) {
+    return cache[template] = children;
   }
 
-  return cache[template] = children[0];
+  var root = children[0];
+  if (children.length > 1 || root.type !== ELEMENT) {
+    error$1('Component template should contain exactly one root element.');
+  }
+  return cache[template] = root;
 }
 
 /**
@@ -3988,352 +3984,149 @@ function updateAttrs(oldVnode, vnode) {
 
 var attributes = { create: updateAttrs, update: updateAttrs };
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
+var toString$1 = function (str) {
+  var defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
 
-var attrRE = /([\w-]+)|(['"])(.*?)\2/g;
+  try {
+    return str.toString();
+  } catch (e) {
+    return defaultValue;
+  }
+};
 
-// create optimized lookup object for
-// void elements as listed here:
-// http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
-var lookup = Object.create ? Object.create(null) : {};
-lookup.area = true;
-lookup.base = true;
-lookup.br = true;
-lookup.col = true;
-lookup.embed = true;
-lookup.hr = true;
-lookup.img = true;
-lookup.input = true;
-lookup.keygen = true;
-lookup.link = true;
-lookup.menuitem = true;
-lookup.meta = true;
-lookup.param = true;
-lookup.source = true;
-lookup.track = true;
-lookup.wbr = true;
+var patch = snabbdom.init([attributes, style]);
 
-var parseTag$1 = function (tag) {
-    var i = 0;
-    var key;
-    var res = {
-        type: 'tag',
-        name: '',
-        voidElement: false,
-        attrs: {},
-        children: []
-    };
+function create$1(ast, context, instance) {
 
-    tag.replace(attrRE, function (match) {
-        if (i % 2) {
-            key = match;
+  var createText = function createText(node) {
+    var safe = node.safe,
+        content = node.content;
+
+    if (safe !== FALSE || !string(content) || !tag.test(content)) {
+      return content;
+    }
+    return compile$$1(content, TRUE).map(function (node) {
+      return render(node, createText, createElement).node;
+    });
+  };
+
+  var createElement = function createElement(node, isRootElement, isComponent) {
+    var name = node.name,
+        attributes$$1 = node.attributes,
+        directives = node.directives,
+        children = node.children;
+
+
+    var attrs = {},
+        dires = [],
+        styles = void 0;
+    var data = { attrs: attrs };
+
+    // 指令的创建要确保顺序
+    // 组件必须第一个执行
+    // 因为如果在组件上写了 on-click="xx" 其实是监听从组件 fire 出的 click 事件
+    // 因此 component 必须在 event 指令之前执行
+
+    if (isComponent) {
+      push$1(dires, {
+        node: node,
+        name: 'component',
+        directive: instance.directive('component')
+      });
+    } else {
+      each(attributes$$1, function (node) {
+        var name = node.name,
+            value = node.value;
+
+        if (name === 'style') {
+          var list = parse$1(value, ';', ':');
+          if (list.length) {
+            styles = {};
+            each(list, function (item) {
+              if (item.value) {
+                styles[camelCase(item.key)] = item.value;
+              }
+            });
+          }
         } else {
-            if (i === 0) {
-                if (lookup[match] || tag.charAt(tag.length - 2) === '/') {
-                    res.voidElement = true;
-                }
-                res.name = match;
-            } else {
-                res.attrs[key] = match.replace(/^['"]|['"]$/g, '');
-            }
+          attrs[name] = value;
         }
-        i++;
-    });
+      });
+    }
 
-    return res;
-};
+    each(directives, function (node) {
+      var name = node.name;
 
-/*jshint -W030 */
-var tagRE = /(?:<!--[\S\s]*?-->|<(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])+>)/g;
-var parseTag = parseTag$1;
-// re-used obj for quick lookups of components
-var empty = Object.create ? Object.create(null) : {};
-// common logic for pushing a child node onto a list
-function pushTextNode(list, html, start) {
-    // calculate correct end of the content slice in case there's
-    // no tag after the text node.
-    var end = html.indexOf('<', start);
-    var content = html.slice(start, end === -1 ? undefined : end);
-    // if a node is nothing but whitespace, no need to add it.
-    if (!/^\s*$/.test(content)) {
-        list.push({
-            type: 'text',
-            content: content
+      if (name === KEYWORD_UNIQUE) {
+        data.key = node.value;
+      } else {
+        push$1(dires, {
+          name: name,
+          node: node,
+          directive: instance.directive(name)
         });
-    }
-}
-
-var parse$2 = function parse$2(html, options) {
-    options || (options = {});
-    options.components || (options.components = empty);
-    var result = [];
-    var current;
-    var level = -1;
-    var arr = [];
-    var byTag = {};
-    var inComponent = false;
-
-    html.replace(tagRE, function (tag, index) {
-        if (inComponent) {
-            if (tag !== '</' + current.name + '>') {
-                return;
-            } else {
-                inComponent = false;
-            }
-        }
-
-        var isOpen = tag.charAt(1) !== '/';
-        var isComment = tag.indexOf('<!--') === 0;
-        var start = index + tag.length;
-        var nextChar = html.charAt(start);
-        var parent;
-
-        if (isOpen && !isComment) {
-            level++;
-
-            current = parseTag(tag);
-            if (current.type === 'tag' && options.components[current.name]) {
-                current.type = 'component';
-                inComponent = true;
-            }
-
-            if (!current.voidElement && !inComponent && nextChar && nextChar !== '<') {
-                pushTextNode(current.children, html, start);
-            }
-
-            byTag[current.tagName] = current;
-
-            // if we're at root, push new base node
-            if (level === 0) {
-                result.push(current);
-            }
-
-            parent = arr[level - 1];
-
-            if (parent) {
-                parent.children.push(current);
-            }
-
-            arr[level] = current;
-        }
-
-        if (isComment || !isOpen || current.voidElement) {
-            if (!isComment) {
-                level--;
-            }
-            if (!inComponent && nextChar !== '<' && nextChar) {
-                // trailing text node
-                // if we're at the root, push a base text node. otherwise add as
-                // a child to the current node.
-                parent = level === -1 ? result : arr[level].children;
-                pushTextNode(parent, html, start);
-            }
-        }
+      }
     });
 
-    return result;
-};
-
-var utils = createCommonjsModule(function (module, exports) {
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.createTextVNode = createTextVNode;
-exports.transformName = transformName;
-exports.unescapeEntities = unescapeEntities;
-
-var _vnode = vnode;
-
-var _vnode2 = _interopRequireDefault(_vnode);
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { default: obj };
-}
-
-function createTextVNode(text, context) {
-    return (0, _vnode2.default)(undefined, undefined, undefined, unescapeEntities(text, context));
-}
-
-function transformName(name) {
-    // Replace -a with A to help camel case style property names.
-    name = name.replace(/-(\w)/g, function _replace($1, $2) {
-        return $2.toUpperCase();
-    });
-    // Handle properties that start with a -.
-    var firstChar = name.charAt(0).toLowerCase();
-    return '' + firstChar + name.substring(1);
-}
-
-// Regex for matching HTML entities.
-var entityRegex = new RegExp('&[a-z0-9]+;', 'gi');
-// Element for setting innerHTML for transforming entities.
-var el = null;
-
-function unescapeEntities(text, context) {
-    // Create the element using the context if it doesn't exist.
-    if (!el) {
-        el = context.createElement('div');
-    }
-    return text.replace(entityRegex, function (entity) {
-        el.innerHTML = entity;
-        return el.textContent;
-    });
-}
-});
-
-var strings$1 = createCommonjsModule(function (module, exports) {
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function (html) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-    var context = options.context || document;
-
-    // If there's nothing here, return null;
-    if (!html) {
-        return null;
+    if (styles) {
+      data.style = styles;
     }
 
-    // Maintain a list of created vnodes so we can call the create hook.
-    var createdVNodes = [];
+    if (isRootElement || dires.length) {
+      (function () {
 
-    // Parse the string into the AST and convert to VNodes.
-    var vnodes = convertNodes((0, _parse2.default)(html), createdVNodes, context);
+        var map = toObject(dires, 'name');
 
-    var res = void 0;
-    if (!vnodes) {
-        // If there are no vnodes but there is string content, then the string
-        // must be just text or at least invalid HTML that we should treat as
-        // text (since the AST parser didn't find any well-formed HTML).
-        res = toVNode({ type: 'text', content: html }, createdVNodes, context);
-    } else if (vnodes.length === 1) {
-        // If there's only one root node, just return it as opposed to an array.
-        res = vnodes[0];
-    } else {
-        // Otherwise we have an array of VNodes, which we should return.
-        res = vnodes;
-    }
+        var notify = function notify(vnode, type) {
+          each(dires, function (item) {
+            var directive = item.directive;
 
-    // Call the 'create' hook for each created node.
-    options.hooks && options.hooks.create && createdVNodes.forEach(function (node) {
-        options.hooks.create(node);
-    });
-    return res;
-};
-
-var _parse = parse$2;
-
-var _parse2 = _interopRequireDefault(_parse);
-
-var _h = h;
-
-var _h2 = _interopRequireDefault(_h);
-
-var _utils = utils;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { default: obj };
-}
-
-function _defineProperty(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-    } else {
-        obj[key] = value;
-    }return obj;
-}
-
-function convertNodes(nodes, createdVNodes, context) {
-    if (nodes instanceof Array && nodes.length > 0) {
-        return nodes.map(function (node) {
-            return toVNode(node, createdVNodes, context);
-        });
-    } else {
-        return undefined;
-    }
-}
-
-function toVNode(node, createdVNodes, context) {
-    var newNode = void 0;
-    if (node.type === 'text') {
-        newNode = (0, _utils.createTextVNode)(node.content, context);
-    } else {
-        newNode = (0, _h2.default)(node.name, buildVNodeData(node, context), convertNodes(node.children, createdVNodes, context));
-    }
-    createdVNodes.push(newNode);
-    return newNode;
-}
-
-function buildVNodeData(node, context) {
-    var data = {};
-    if (!node.attrs) {
-        return data;
-    }
-
-    var attrs = Object.keys(node.attrs).reduce(function (memo, name) {
-        if (name !== 'style' && name !== 'class') {
-            var val = (0, _utils.unescapeEntities)(node.attrs[name], context);
-            memo ? memo[name] = val : memo = _defineProperty({}, name, val);
-        }
-        return memo;
-    }, null);
-    if (attrs) {
-        data.attrs = attrs;
-    }
-
-    var style = parseStyle(node);
-    if (style) {
-        data.style = style;
-    }
-
-    var classes = parseClass(node);
-    if (classes) {
-        data.class = classes;
-    }
-
-    return data;
-}
-
-function parseStyle(node) {
-    try {
-        return node.attrs.style.split(';').reduce(function (memo, styleProp) {
-            var res = styleProp.split(':');
-            var name = (0, _utils.transformName)(res[0].trim());
-            if (name) {
-                var val = res[1].replace('!important', '').trim();
-                memo ? memo[name] = val : memo = _defineProperty({}, name, val);
+            if (directive && func(directive[type])) {
+              directive[type]({
+                el: vnode.elm,
+                node: item.node,
+                directives: map,
+                attrs: attrs,
+                instance: instance
+              });
             }
-            return memo;
-        }, null);
-    } catch (e) {
-        return null;
-    }
-}
+          });
+        };
 
-function parseClass(node) {
-    try {
-        return node.attrs.class.split(' ').reduce(function (memo, className) {
-            className = className.trim();
-            if (className) {
-                memo ? memo[className] = true : memo = _defineProperty({}, className, true);
-            }
-            return memo;
-        }, null);
-    } catch (e) {
-        return null;
-    }
-}
-});
+        var update = function update(oldNode, vnode) {
+          if (oldNode.attached) {
+            notify(vnode, 'update');
+          } else {
+            notify(oldNode, 'attach');
+            vnode = oldNode;
+          }
+          vnode.attached = TRUE;
+        };
 
-var strings = strings$1;
+        data.hook = {
+          insert: update,
+          postpatch: update,
+          destroy: function destroy(vnode) {
+            notify(vnode, 'detach');
+          }
+        };
+      })();
+    }
+
+    // snabbdom 只支持字符串形式的 children
+    children = children.map(function (child) {
+      return child && has$2(child, 'sel') && has$2(child, 'elm') ? child : toString$1(child);
+    });
+
+    return h(isComponent ? 'div' : name, data, children);
+  };
+
+  var importTemplate = function importTemplate(name) {
+    return instance.partial(name);
+  };
+
+  return render(ast, createText, createElement, importTemplate, context);
+}
 
 function addListener(element, type, listener) {
   element.addEventListener(type, listener, FALSE);
@@ -4422,166 +4215,6 @@ var native = Object.freeze({
 	on: on$1,
 	off: off$1
 });
-
-var toString$1 = function (str) {
-  var defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
-
-  try {
-    return str.toString();
-  } catch (e) {
-    return defaultValue;
-  }
-};
-
-var patch = snabbdom.init([attributes, style]);
-
-function create$1(root, instance) {
-
-  var counter = 0;
-  var traverse = function traverse(node, enter, leave) {
-
-    if (enter(node) === FALSE) {
-      return;
-    }
-
-    var children = [];
-    if (array(node.children)) {
-      each(node.children, function (item) {
-        item = traverse(item, enter, leave);
-        if (item != NULL) {
-          children.push(item);
-        }
-      });
-    }
-
-    return leave(node, children);
-  };
-
-  return traverse(root, function (node) {
-    counter++;
-    if (node.type === ATTRIBUTE || node.type === DIRECTIVE) {
-      return FALSE;
-    }
-  }, function (node, children) {
-    counter--;
-    if (node.type === ELEMENT) {
-      var _ret = function () {
-
-        var attrs = {},
-            directives = [],
-            styles = void 0;
-
-        var data = { attrs: attrs };
-
-        // 指令的创建要确保顺序
-        // 组件必须第一个执行
-        // 因为如果在组件上写了 on-click="xx" 其实是监听从组件 fire 出的 click 事件
-        // 因此 component 必须在 event 指令之前执行
-
-        if (node.component) {
-          directives.push({
-            node: node,
-            name: 'component',
-            directive: instance.directive('component')
-          });
-        } else {
-          each(node.attrs, function (node) {
-            var name = node.name,
-                value = node.value;
-
-            if (name === 'style') {
-              var list = parse$1(value, ';', ':');
-              if (list.length) {
-                styles = {};
-                each(list, function (item) {
-                  if (item.value) {
-                    styles[camelCase(item.key)] = item.value;
-                  }
-                });
-              }
-            } else {
-              attrs[name] = value;
-            }
-          });
-        }
-
-        each(node.directives, function (node) {
-          var name = node.name;
-
-          if (name === KEYWORD_UNIQUE) {
-            data.key = node.value;
-          } else {
-            directives.push({
-              name: name,
-              node: node,
-              directive: instance.directive(name)
-            });
-          }
-        });
-
-        if (styles) {
-          data.style = styles;
-        }
-
-        if (!counter || directives.length) {
-          (function () {
-
-            var map = toObject(directives, 'name');
-
-            var notify = function notify(vnode, type) {
-              each(directives, function (item) {
-                var directive = item.directive;
-
-                if (directive && func(directive[type])) {
-                  directive[type]({
-                    el: vnode.elm,
-                    node: item.node,
-                    directives: map,
-                    attrs: attrs,
-                    instance: instance
-                  });
-                }
-              });
-            };
-
-            var update = function update(oldNode, vnode) {
-              if (oldNode.attached) {
-                notify(vnode, 'update');
-                vnode.attached = TRUE;
-              } else {
-                notify(oldNode, 'attach');
-                oldNode.attached = TRUE;
-              }
-            };
-
-            data.hook = {
-              insert: update,
-              postpatch: update,
-              destroy: function destroy(vnode) {
-                notify(vnode, 'detach');
-              }
-            };
-          })();
-        }
-
-        return {
-          v: h(node.name, data, children)
-        };
-      }();
-
-      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-    } else if (node.type === TEXT) {
-      var safe = node.safe,
-          content = node.content;
-
-      if (safe || !string(content) || !tag.test(content)) {
-        return toString$1(content);
-      } else {
-        return strings.default(content);
-      }
-    }
-  });
-}
 
 /**
  * <Component ref="component" />
@@ -4910,14 +4543,16 @@ var modelDt = {
 
 function getComponentInfo(node, instance, directives, callback) {
   var _node = node,
-      component = _node.component,
-      attrs = _node.attrs;
+      name = _node.name,
+      attributes = _node.attributes;
 
-  instance.component(component, function (options) {
+  instance.component(name, function (options) {
     var props = {};
-    each(attrs, function (node) {
-      props[camelCase(node.name)] = node.value;
-    });
+    if (array(attributes)) {
+      each(attributes, function (node) {
+        props[camelCase(node.name)] = node.value;
+      });
+    }
     if (!has$2(props, 'value')) {
       var model = directives.model;
 
@@ -4989,7 +4624,7 @@ var Yox = function () {
 
     var instance = this;
 
-    _execute(options[BEFORE_CREATE], instance, options);
+    callFunction(options[BEFORE_CREATE], instance, options);
 
     var el = options.el,
         data = options.data,
@@ -5079,7 +4714,7 @@ var Yox = function () {
               if (!deps) {
                 instance.$computedStack.push([]);
               }
-              var result = _execute(get$$1, instance);
+              var result = callFunction(get$$1, instance);
 
               var newDeps = deps || instance.$computedStack.pop();
               var oldDeps = instance.$computedDeps[keypath];
@@ -5126,7 +4761,7 @@ var Yox = function () {
     });
     instance.watch(watchers);
 
-    _execute(options[AFTER_CREATE], instance);
+    callFunction(options[AFTER_CREATE], instance);
 
     // 检查 template
     if (string(template)) {
@@ -5161,16 +4796,12 @@ var Yox = function () {
     }
 
     if (methods) {
-      (function () {
-        var prototype = instance.constructor.prototype;
-
-        each$1(methods, function (fn, name) {
-          if (has$2(prototype, name)) {
-            error$1('Passing a \'' + name + '\' method is conflicted with built-in methods.');
-          }
-          instance[name] = fn;
-        });
-      })();
+      each$1(methods, function (fn, name) {
+        if (has$2(prototype, name)) {
+          error$1('Passing a \'' + name + '\' method is conflicted with built-in methods.');
+        }
+        instance[name] = fn;
+      });
     }
     extend(instance, extensions);
 
@@ -5183,7 +4814,7 @@ var Yox = function () {
       instance.$viewWatcher = function () {
         instance.$dirty = TRUE;
       };
-      _execute(options[BEFORE_MOUNT], instance);
+      callFunction(options[BEFORE_MOUNT], instance);
       instance.$template = Yox.compile(template);
       instance.updateView(el || create$2('div'));
     }
@@ -5226,7 +4857,7 @@ var Yox = function () {
         var keys$$1 = parse(context);
         while (TRUE) {
           keys$$1.push(keypath);
-          context = stringify$1(keys$$1);
+          context = stringify(keys$$1);
           result = getValue(context);
           if (result || keys$$1.length <= 1) {
             if (result) {
@@ -5466,7 +5097,7 @@ var Yox = function () {
 
 
       if ($currentNode) {
-        _execute($options[BEFORE_UPDATE], instance);
+        callFunction($options[BEFORE_UPDATE], instance);
       }
 
       var context = {};
@@ -5487,26 +5118,25 @@ var Yox = function () {
         }
       });
 
-      var _viewEnginer$render = render$1($template, context, instance.partial.bind(instance)),
-          root = _viewEnginer$render.root,
-          deps = _viewEnginer$render.deps;
+      var _vdom$create = create$1($template, context, instance),
+          node = _vdom$create.node,
+          deps = _vdom$create.deps;
 
       instance.$viewDeps = keys(deps);
       updateDeps(instance, instance.$viewDeps, $viewDeps, $viewWatcher);
 
-      var newNode = create$1(root, instance),
-          afterHook = void 0;
+      var afterHook = void 0;
       if ($currentNode) {
         afterHook = AFTER_UPDATE;
-        $currentNode = patch($currentNode, newNode);
+        $currentNode = patch($currentNode, node);
       } else {
         afterHook = AFTER_MOUNT;
-        $currentNode = patch(arguments[0], newNode);
+        $currentNode = patch(arguments[0], node);
         instance.$el = $currentNode.elm;
       }
 
       instance.$currentNode = $currentNode;
-      _execute($options[afterHook], instance);
+      callFunction($options[afterHook], instance);
     }
 
     /**
@@ -5544,7 +5174,7 @@ var Yox = function () {
 
       var instance = this;
       if (value.indexOf('(') > 0) {
-        var _ret3 = function () {
+        var _ret2 = function () {
           var ast = compile$1(value);
           if (ast.type === CALL) {
             return {
@@ -5572,7 +5202,7 @@ var Yox = function () {
                         return keypath;
                       }
                     } else if (type === MEMBER) {
-                      name = node.stringify();
+                      name = stringify$1(node);
                     }
 
                     var result = instance.get(name, keypath);
@@ -5581,13 +5211,21 @@ var Yox = function () {
                     }
                   });
                 }
-                _execute(instance[ast.callee.name], instance, args);
+                var name = stringify$1(ast.callee);
+                var fn = instance[name];
+                if (!fn) {
+                  var result = instance.get(name, keypath);
+                  if (result) {
+                    fn = result.value;
+                  }
+                }
+                callFunction(fn, instance, args);
               }
             };
           }
         }();
 
-        if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+        if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
       } else {
         return function (event$$1) {
           instance.fire(value, event$$1);
@@ -5674,7 +5312,7 @@ var Yox = function () {
           $eventEmitter = instance.$eventEmitter;
 
 
-      _execute($options[BEFORE_DESTROY], instance);
+      callFunction($options[BEFORE_DESTROY], instance);
 
       if ($children) {
         each($children, function (child) {
@@ -5699,7 +5337,7 @@ var Yox = function () {
         delete instance[key];
       });
 
-      _execute($options[AFTER_DESTROY], instance);
+      callFunction($options[AFTER_DESTROY], instance);
     }
 
     /**
@@ -5818,7 +5456,7 @@ var Yox = function () {
   return Yox;
 }();
 
-Yox.version = '0.19.20';
+Yox.version = '0.20.3';
 
 /**
  * 工具，便于扩展、插件使用
