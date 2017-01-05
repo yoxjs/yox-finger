@@ -68,19 +68,16 @@ const directive = {
       }
     )
 
+    return function () {
+      el.$finger.alloy.destroy()
+      el.$finger.emitter.off()
+      el.$finger = null
+    }
+
   },
-  update(options) {
-    this.detach(options)
-    this.attach(options)
-  },
-  detach({ el }) {
-    el.$finger.alloy.destroy()
-    el.$finger.emitter.off()
-    el.$finger = null
-  }
 }
 
-export const version = '0.3.0'
+export const version = '0.3.1'
 
 export function install(Yox) {
 

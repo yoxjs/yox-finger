@@ -74,21 +74,16 @@ var directive = {
     el.$finger.emitter.on(node.name, function (event) {
       return listener(new Event(event));
     });
-  },
-  update: function update(options) {
-    this.detach(options);
-    this.attach(options);
-  },
-  detach: function detach(_ref2) {
-    var el = _ref2.el;
 
-    el.$finger.alloy.destroy();
-    el.$finger.emitter.off();
-    el.$finger = null;
+    return function () {
+      el.$finger.alloy.destroy();
+      el.$finger.emitter.off();
+      el.$finger = null;
+    };
   }
 };
 
-var version = '0.3.0';
+var version = '0.3.1';
 
 function install(Yox) {
   var utils = Yox.utils;
