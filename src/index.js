@@ -20,64 +20,62 @@ const PRESS_MOVE = 'pressMove'
 const MULTIPOINT_START = 'multipointStart'
 const MULTIPOINT_END = 'multipointEnd'
 
-const directive = {
-  attach({ el, node, instance }) {
+function directive({ el, node, instance }) {
 
-    if (!el.$finger) {
-      let emitter = new Emitter()
-      let alloy = new AlloyFinger(el, {
-        tap(e) {
-          emitter.fire(TAP, e)
-        },
-        longTap(e) {
-          emitter.fire(LONG_TAP, e)
-        },
-        singleTap(e) {
-          emitter.fire(SINGLE_TAP, e)
-        },
-        doubleTap(e) {
-          emitter.fire(DOUBLE_TAP, e)
-        },
-        swipe(e) {
-          emitter.fire(SWIPE, e)
-        },
-        pinch(e) {
-          emitter.fire(PINCH, e)
-        },
-        rotate(e) {
-          emitter.fire(MULTIPOINT_START, e)
-        },
-        pressMove(e) {
-          emitter.fire(PRESS_MOVE, e)
-        },
-        multipointStart(e) {
-          emitter.fire(MULTIPOINT_START, e)
-        },
-        multipointEnd(e) {
-          emitter.fire(MULTIPOINT_END, e)
-        },
-      })
-      el.$finger = { emitter, alloy }
+  if (!el.$finger) {
+    let emitter = new Emitter()
+    let alloy = new AlloyFinger(el, {
+      tap(e) {
+        emitter.fire(TAP, e)
+      },
+      longTap(e) {
+        emitter.fire(LONG_TAP, e)
+      },
+      singleTap(e) {
+        emitter.fire(SINGLE_TAP, e)
+      },
+      doubleTap(e) {
+        emitter.fire(DOUBLE_TAP, e)
+      },
+      swipe(e) {
+        emitter.fire(SWIPE, e)
+      },
+      pinch(e) {
+        emitter.fire(PINCH, e)
+      },
+      rotate(e) {
+        emitter.fire(MULTIPOINT_START, e)
+      },
+      pressMove(e) {
+        emitter.fire(PRESS_MOVE, e)
+      },
+      multipointStart(e) {
+        emitter.fire(MULTIPOINT_START, e)
+      },
+      multipointEnd(e) {
+        emitter.fire(MULTIPOINT_END, e)
+      },
+    })
+    el.$finger = { emitter, alloy }
+  }
+
+  let listener = instance.compileValue(node.keypath, node.value)
+  el.$finger.emitter.on(
+    node.name,
+    function (event) {
+      return listener(new Event(event))
     }
+  )
 
-    let listener = instance.compileValue(node.keypath, node.value)
-    el.$finger.emitter.on(
-      node.name,
-      function (event) {
-        return listener(new Event(event))
-      }
-    )
+  return function () {
+    el.$finger.alloy.destroy()
+    el.$finger.emitter.off()
+    el.$finger = null
+  }
 
-    return function () {
-      el.$finger.alloy.destroy()
-      el.$finger.emitter.off()
-      el.$finger = null
-    }
-
-  },
 }
 
-export const version = '0.3.1'
+export const version = '0.4.0'
 
 export function install(Yox) {
 

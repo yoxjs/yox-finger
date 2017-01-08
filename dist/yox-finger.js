@@ -24,66 +24,64 @@ var PRESS_MOVE = 'pressMove';
 var MULTIPOINT_START = 'multipointStart';
 var MULTIPOINT_END = 'multipointEnd';
 
-var directive = {
-  attach: function attach(_ref) {
-    var el = _ref.el,
-        node = _ref.node,
-        instance = _ref.instance;
+function directive(_ref) {
+  var el = _ref.el,
+      node = _ref.node,
+      instance = _ref.instance;
 
 
-    if (!el.$finger) {
-      (function () {
-        var emitter = new Emitter();
-        var alloy = new AlloyFinger(el, {
-          tap: function tap(e) {
-            emitter.fire(TAP, e);
-          },
-          longTap: function longTap(e) {
-            emitter.fire(LONG_TAP, e);
-          },
-          singleTap: function singleTap(e) {
-            emitter.fire(SINGLE_TAP, e);
-          },
-          doubleTap: function doubleTap(e) {
-            emitter.fire(DOUBLE_TAP, e);
-          },
-          swipe: function swipe(e) {
-            emitter.fire(SWIPE, e);
-          },
-          pinch: function pinch(e) {
-            emitter.fire(PINCH, e);
-          },
-          rotate: function rotate(e) {
-            emitter.fire(MULTIPOINT_START, e);
-          },
-          pressMove: function pressMove(e) {
-            emitter.fire(PRESS_MOVE, e);
-          },
-          multipointStart: function multipointStart(e) {
-            emitter.fire(MULTIPOINT_START, e);
-          },
-          multipointEnd: function multipointEnd(e) {
-            emitter.fire(MULTIPOINT_END, e);
-          }
-        });
-        el.$finger = { emitter: emitter, alloy: alloy };
-      })();
-    }
-
-    var listener = instance.compileValue(node.keypath, node.value);
-    el.$finger.emitter.on(node.name, function (event) {
-      return listener(new Event(event));
-    });
-
-    return function () {
-      el.$finger.alloy.destroy();
-      el.$finger.emitter.off();
-      el.$finger = null;
-    };
+  if (!el.$finger) {
+    (function () {
+      var emitter = new Emitter();
+      var alloy = new AlloyFinger(el, {
+        tap: function tap(e) {
+          emitter.fire(TAP, e);
+        },
+        longTap: function longTap(e) {
+          emitter.fire(LONG_TAP, e);
+        },
+        singleTap: function singleTap(e) {
+          emitter.fire(SINGLE_TAP, e);
+        },
+        doubleTap: function doubleTap(e) {
+          emitter.fire(DOUBLE_TAP, e);
+        },
+        swipe: function swipe(e) {
+          emitter.fire(SWIPE, e);
+        },
+        pinch: function pinch(e) {
+          emitter.fire(PINCH, e);
+        },
+        rotate: function rotate(e) {
+          emitter.fire(MULTIPOINT_START, e);
+        },
+        pressMove: function pressMove(e) {
+          emitter.fire(PRESS_MOVE, e);
+        },
+        multipointStart: function multipointStart(e) {
+          emitter.fire(MULTIPOINT_START, e);
+        },
+        multipointEnd: function multipointEnd(e) {
+          emitter.fire(MULTIPOINT_END, e);
+        }
+      });
+      el.$finger = { emitter: emitter, alloy: alloy };
+    })();
   }
-};
 
-var version = '0.3.1';
+  var listener = instance.compileValue(node.keypath, node.value);
+  el.$finger.emitter.on(node.name, function (event) {
+    return listener(new Event(event));
+  });
+
+  return function () {
+    el.$finger.alloy.destroy();
+    el.$finger.emitter.off();
+    el.$finger = null;
+  };
+}
+
+var version = '0.4.0';
 
 function install(Yox) {
   var utils = Yox.utils;
