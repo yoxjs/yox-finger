@@ -75,15 +75,14 @@ function directive({ el, node, instance }) {
 
 }
 
-export const version = '0.4.0'
+export const version = '0.5.0'
 
 export function install(Yox) {
 
-  let { utils } = Yox
-  Event = utils.Event
-  Emitter = utils.Emitter
+  Event = Yox.Event
+  Emitter = Yox.Emitter
 
-  utils.array.each(
+  Yox.array.each(
     [
       TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP,
       SWIPE, PINCH, ROTATE, PRESS_MOVE,
