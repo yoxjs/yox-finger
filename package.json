@@ -1,6 +1,6 @@
 {
   "name": "yox-finger",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "AlloyFinger wrapper for yox.js",
   "main": "dist/yox-finger.min.js",
   "keywords": [

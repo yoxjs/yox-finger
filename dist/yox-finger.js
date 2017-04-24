@@ -1,7 +1,7 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.YoxFinger = global.YoxFinger || {})));
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.YoxFinger = global.YoxFinger || {})));
 }(this, (function (exports) { 'use strict';
 
 var AlloyFinger = typeof require === 'function' ? require('alloyfinger') : window.AlloyFinger;
@@ -69,7 +69,7 @@ function directive(_ref) {
     })();
   }
 
-  var listener = instance.compileValue(node.keypath, node.value);
+  var listener = instance.compileDirective(node);
   el.$finger.emitter.on(node.name, function (event) {
     return listener(new Event(event));
   });
@@ -81,7 +81,7 @@ function directive(_ref) {
   };
 }
 
-var version = '0.5.0';
+var version = '0.6.0';
 
 function install(Yox) {
 
