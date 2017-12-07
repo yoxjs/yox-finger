@@ -59,13 +59,15 @@ function directive({ el, node, instance }) {
     el.$finger = { emitter, alloy }
   }
 
-  let listener = instance.compileDirective(node)
-  el.$finger.emitter.on(
-    node.name,
-    function (event) {
-      return listener(new Event(event))
-    }
-  )
+  let result = instance.compileDirective(node)
+  if (result) {
+    el.$finger.emitter.on(
+      node.name,
+      function (event) {
+        return result.listener(new Event(event))
+      }
+    )
+  }
 
   return function () {
     el.$finger.alloy.destroy()
@@ -75,7 +77,7 @@ function directive({ el, node, instance }) {
 
 }
 
-export const version = '0.6.0'
+export const version = '0.6.1'
 
 export function install(Yox) {
 

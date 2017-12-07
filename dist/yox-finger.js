@@ -69,10 +69,12 @@ function directive(_ref) {
     })();
   }
 
-  var listener = instance.compileDirective(node);
-  el.$finger.emitter.on(node.name, function (event) {
-    return listener(new Event(event));
-  });
+  var result = instance.compileDirective(node);
+  if (result) {
+    el.$finger.emitter.on(node.name, function (event) {
+      return result.listener(new Event(event));
+    });
+  }
 
   return function () {
     el.$finger.alloy.destroy();
@@ -81,7 +83,7 @@ function directive(_ref) {
   };
 }
 
-var version = '0.6.0';
+var version = '0.6.1';
 
 function install(Yox) {
 
