@@ -69,10 +69,10 @@ function directive(_ref) {
     })();
   }
 
-  var result = instance.compileDirective(node);
-  if (result) {
+  var listener = instance.compileDirective(node);
+  if (listener) {
     el.$finger.emitter.on(node.name, function (event) {
-      return result.listener(new Event(event));
+      return listener(new Event(event));
     });
   }
 
@@ -83,7 +83,7 @@ function directive(_ref) {
   };
 }
 
-var version = '0.6.1';
+var version = '0.7.0';
 
 function install(Yox) {
 
@@ -101,7 +101,5 @@ if (typeof Yox !== 'undefined' && Yox.use) {
 
 exports.version = version;
 exports.install = install;
-
-Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
