@@ -9,10 +9,10 @@
     <script id="template" type="plain/text">
 
         <div>
-          <button o-tap="tap()">
+          <button on-tap="tap()">
             tap
           </button>
-          <button o-longTap="longTap">
+          <button on-long-tap="longTap">
             longTap
           </button>
         </div>
@@ -22,12 +22,11 @@
     <script src="./yox.js"></script>
     <script src="../dist/yox-finger.js"></script>
     <script>
+        Yox.use(YoxFinger)
         var instance = new Yox({
           el: '#app',
           data: {
-            pressOptions: {
-              event: 'xxx'
-            }
+
           },
           template: '#template',
           events: {

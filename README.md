@@ -15,7 +15,7 @@ npm install yox
 npm install yox-finger
 ```
 
-```javascript
+```js
 import Yox from 'yox'
 import YoxFinger from 'yox-finger'
 Yox.use(YoxFinger)
@@ -27,28 +27,39 @@ CDN
 <script src="https://unpkg.com/alloyfinger@latest"></script>
 <script src="https://unpkg.com/yox@latest"></script>
 <script src="https://unpkg.com/yox-finger@latest"></script>
+<script>
+  Yox.use(YoxFinger)
+</script>
 ```
 
 ## Usage
 
-```javascript
+```js
 {
-    methods: {
-        tap: function () {
+  methods: {
+    tap: function () {
 
-        },
-        pinch: function () {
+    },
+    pinch: function () {
 
-        }
+    },
+    longTap: function () {
+
     }
+  }
 }
 ```
 
 ```html
-<button o-tap="tap()">
+<div>
+  <button on-tap="tap()">
     Tap
-</button>
-<button o-pinch="pinch()">
+  </button>
+  <button on-pinch="pinch()">
     Pinch
-</button>
+  </button>
+  <button on-long-tap="longTap()">
+    Long Tap
+  </button>
+</div>
 ```

@@ -1,6 +1,6 @@
 {
   "name": "yox-finger",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "AlloyFinger wrapper for yox.js",
   "main": "dist/yox-finger.min.js",
   "keywords": [
@@ -10,16 +10,13 @@
     "mvvm"
   ],
   "scripts": {
-    "source": "rollup -c",
-    "release": "NODE_ENV=release rollup -c"
+    "dev": "node_modules/.bin/rollup -c ./build/config.dev.js",
+    "prod": "node_modules/.bin/rollup -c ./build/config.prod.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yoxjs/yox-finger.git"
   },
-  "keywords": [
-    "yox-finger"
-  ],
   "author": "musicode",
   "license": "MIT",
   "bugs": {
@@ -27,8 +24,14 @@
   },
   "homepage": "https://github.com/yoxjs/yox-finger#readme",
   "devDependencies": {
-    "babel-preset-es2015-rollup": "^1.2.0",
-    "rollup-plugin-babel": "^2.6.1",
-    "rollup-plugin-uglify": "^1.0.1"
+    "rollup": "^1.10.1",
+    "rollup-plugin-buble": "^0.19.6",
+    "rollup-plugin-filesize": "^6.0.1",
+    "rollup-plugin-replace": "^2.2.0",
+    "rollup-plugin-serve": "^1.0.1",
+    "rollup-plugin-terser": "^4.0.4",
+    "rollup-plugin-typescript": "^1.0.1",
+    "tslib": "^1.9.3",
+    "typescript": "^3.4.4"
   }
 }

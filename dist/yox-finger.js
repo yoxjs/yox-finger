@@ -1,105 +1,95 @@
+/**
+ * yox-finger.js v0.8.0
+ * (c) 2017-2019 musicode
+ * Released under the MIT License.
+ */
+
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.YoxFinger = global.YoxFinger || {})));
-}(this, (function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = global || self, factory(global.YoxFinger = {}));
+}(this, function (exports) { 'use strict';
 
-var AlloyFinger = typeof require === 'function' ? require('alloyfinger') : window.AlloyFinger;
+  var AlloyFinger = typeof require === 'function'
+      ? require('alloyfinger')
+      : window.AlloyFinger;
 
-if (!AlloyFinger) {
-  throw new Error('[yox-touch] cannot locate AlloyFinger.js.');
-}
-
-var Event = void 0;
-var Emitter = void 0;
-
-var TAP = 'tap';
-var LONG_TAP = 'longTap';
-var SINGLE_TAP = 'singleTap';
-var DOUBLE_TAP = 'doubleTap';
-var SWIPE = 'swipe';
-var PINCH = 'pinch';
-var ROTATE = 'rotate';
-var PRESS_MOVE = 'pressMove';
-var MULTIPOINT_START = 'multipointStart';
-var MULTIPOINT_END = 'multipointEnd';
-
-function directive(_ref) {
-  var el = _ref.el,
-      node = _ref.node,
-      instance = _ref.instance;
-
-
-  if (!el.$finger) {
-    (function () {
-      var emitter = new Emitter();
-      var alloy = new AlloyFinger(el, {
-        tap: function tap(e) {
-          emitter.fire(TAP, e);
-        },
-        longTap: function longTap(e) {
-          emitter.fire(LONG_TAP, e);
-        },
-        singleTap: function singleTap(e) {
-          emitter.fire(SINGLE_TAP, e);
-        },
-        doubleTap: function doubleTap(e) {
-          emitter.fire(DOUBLE_TAP, e);
-        },
-        swipe: function swipe(e) {
-          emitter.fire(SWIPE, e);
-        },
-        pinch: function pinch(e) {
-          emitter.fire(PINCH, e);
-        },
-        rotate: function rotate(e) {
-          emitter.fire(MULTIPOINT_START, e);
-        },
-        pressMove: function pressMove(e) {
-          emitter.fire(PRESS_MOVE, e);
-        },
-        multipointStart: function multipointStart(e) {
-          emitter.fire(MULTIPOINT_START, e);
-        },
-        multipointEnd: function multipointEnd(e) {
-          emitter.fire(MULTIPOINT_END, e);
-        }
-      });
-      el.$finger = { emitter: emitter, alloy: alloy };
-    })();
+  if (!AlloyFinger) {
+    throw new Error('[yox-finger] cannot locate AlloyFinger.js.')
   }
 
-  var listener = instance.compileDirective(node);
-  if (listener) {
-    el.$finger.emitter.on(node.name, function (event) {
-      return listener(new Event(event));
-    });
+  var events = [
+    'tap',
+    'doubleTap',
+    'longTap',
+    'singleTap',
+
+    'pinch',
+    'swipe',
+    'multipointStart',
+    'multipointEnd',
+
+    'rotate',
+    'pressMove',
+    'twoFingerPressMove',
+
+    'touchStart',
+    'touchMove',
+    'touchEnd',
+    'touchCancel' ];
+
+  /**
+   * 版本
+   *
+   * @type {string}
+   */
+  var version = "0.8.0";
+
+  function install(Yox) {
+
+    Yox.array.each(
+      events,
+      function (name) {
+        Yox.dom.specialEvents[name] = {
+          on: function on(node, listener) {
+            var finger = node.$finger || (node.$finger = new AlloyFinger(node, {}));
+            finger.on(name, listener);
+          },
+          off: function off(node, listener) {
+
+            var finger = node.$finger;
+            finger.off(name, listener);
+
+            // 判断是否还有别的事件监听
+            var hasEvent = false;
+
+            Yox.array.each(
+              events,
+              function (event) {
+                var handlers = finger[event] && finger[event].handlers;
+                if (!Yox.array.falsy(handlers)) {
+                  hasEvent = true;
+                  return false
+                }
+              }
+            );
+
+            if (!hasEvent) {
+              finger.destroy();
+              node.$finger = null;
+            }
+
+          }
+        };
+      }
+    );
+
   }
 
-  return function () {
-    el.$finger.alloy.destroy();
-    el.$finger.emitter.off();
-    el.$finger = null;
-  };
-}
+  exports.install = install;
+  exports.version = version;
 
-var version = '0.7.0';
+  Object.defineProperty(exports, '__esModule', { value: true });
 
-function install(Yox) {
-
-  Event = Yox.Event;
-  Emitter = Yox.Emitter;
-
-  Yox.array.each([TAP, LONG_TAP, SINGLE_TAP, DOUBLE_TAP, SWIPE, PINCH, ROTATE, PRESS_MOVE, MULTIPOINT_START, MULTIPOINT_END], function (name) {
-    Yox.directive(name, directive);
-  });
-}
-
-if (typeof Yox !== 'undefined' && Yox.use) {
-  install(Yox);
-}
-
-exports.version = version;
-exports.install = install;
-
-})));
+}));
+//# sourceMappingURL=yox-finger.js.map
