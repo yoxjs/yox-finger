@@ -1,5 +1,5 @@
 /**
- * yox-finger.js v0.8.0
+ * yox-finger.js v0.8.1
  * (c) 2017-2019 musicode
  * Released under the MIT License.
  */
@@ -43,14 +43,14 @@
    *
    * @type {string}
    */
-  var version = "0.8.0";
+  var version = "0.8.1";
 
   function install(Yox) {
 
     Yox.array.each(
       events,
       function (name) {
-        Yox.dom.specialEvents[name] = {
+        Yox.dom.addSpecialEvent(name, {
           on: function on(node, listener) {
             var finger = node.$finger || (node.$finger = new AlloyFinger(node, {}));
             finger.on(name, listener);
@@ -80,7 +80,7 @@
             }
 
           }
-        };
+        });
       }
     );
 

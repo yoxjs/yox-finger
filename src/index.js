@@ -40,7 +40,7 @@ export function install(Yox) {
   Yox.array.each(
     events,
     function (name) {
-      Yox.dom.specialEvents[name] = {
+      Yox.dom.addSpecialEvent(name, {
         on(node, listener) {
           const finger = node.$finger || (node.$finger = new AlloyFinger(node, {}))
           finger.on(name, listener)
@@ -70,7 +70,7 @@ export function install(Yox) {
           }
 
         }
-      }
+      })
     }
   )
 
