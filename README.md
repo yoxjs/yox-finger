@@ -17,7 +17,7 @@ npm install yox-finger
 
 ```js
 import Yox from 'yox'
-import YoxFinger from 'yox-finger'
+import * as YoxFinger from 'yox-finger'
 Yox.use(YoxFinger)
 ```
 
