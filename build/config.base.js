@@ -1,9 +1,8 @@
-import typescript from 'rollup-plugin-typescript'
-// 替换代码中的 process.env.NODE_ENV
+// 替换代码中的变量
 import replace from 'rollup-plugin-replace'
 // 输出打包后的文件大小
 import filesize from 'rollup-plugin-filesize'
-// 压缩
+// ES6 转 ES5
 import buble from 'rollup-plugin-buble'
 // 压缩
 import { terser } from 'rollup-plugin-terser'
@@ -27,8 +26,7 @@ export default function (env, minify = false, port = 0) {
       'process.env.NODE_ENV': JSON.stringify(env),
       'process.env.NODE_VERSION': JSON.stringify(version),
     }),
-    // typescript(),
-    // buble 比 typescript 直接转 ES3 效果更好
+    // buble 比 typescript 直接转 ES5 效果更好
     buble()
   ]
 
